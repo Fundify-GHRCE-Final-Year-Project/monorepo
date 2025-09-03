@@ -1,4 +1,4 @@
-import { abi } from "@fundify/contract";
+import { abi, contractAddress } from "@fundify/contract";
 import {
   parseProjectCreatedLog,
   parseProjectFundedLog,
@@ -7,7 +7,7 @@ import {
 import { connectDB } from "@fundify/database";
 import { ProjectModel, InvestmentModel } from "@fundify/database";
 import { getRandomProject } from "./lib/dummyProjects.ts";
-import { ethers } from "ethers"
+import { ethers } from "ethers";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -16,7 +16,6 @@ if (!rpcUrl) throw new Error("rpc url is not set");
 
 const provider = new ethers.JsonRpcProvider(rpcUrl);
 const contractInterface = new ethers.Interface(abi);
-const contractAddress = "0x700b6A60ce7EaaEA56F065753d8dcB9653dbAD35";
 
 async function fetchAndProcess(fromBlock: number, toBlock: number) {
   const filter = {
