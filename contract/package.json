@@ -1,0 +1,18 @@
+{
+    "name": "indexer",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+      "test": "forge test",
+      "build": "forge build",
+      "forge:oz-upgradeable": "forge install OpenZeppelin/openzeppelin-contracts-upgradeable --no-git",
+      "forge:oz": "forge install OpenZeppelin/openzeppelin-contracts --no-git",
+      "forge:std": "forge install foundry-rs/forge-std --no-git",
+      "install": "npm run forge:oz-upgradeable && npm run forge:oz && npm run forge:std"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": ""
+  }
+  
