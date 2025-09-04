@@ -1,18 +1,25 @@
-import { abi, contractAddress } from "@fundify/contract";
+import { abi } from "@fundify/contract";
 import {
   parseProjectCreatedLog,
   parseProjectFundedLog,
   parseProjectFundsReleasedLog,
 } from "./lib/eventParsers.ts";
 import { connectDB } from "@fundify/database";
-import { ProjectModel, InvestmentModel } from "@fundify/database";
+import {
+  ProjectModel,
+  InvestmentModel,
+  IndexerStateModel,
+} from "@fundify/database";
 import { getRandomProject } from "./lib/dummyProjects.ts";
 import { ethers } from "ethers";
 import dotenv from "dotenv";
 dotenv.config();
 
-const rpcUrl = "http://127.0.0.1:8545";
-if (!rpcUrl) throw new Error("rpc url is not set");
+const contractAddress = process.env.CONTRACT_ADDRESS;
+if (!contractAddress) throw new Error("CONTRACT_ADDRESS is not set");
+
+const rpcUrl = process.env.RPC_URL;
+if (!rpcUrl) throw new Error("RPC_URL is not set");
 
 const provider = new ethers.JsonRpcProvider(rpcUrl);
 const contractInterface = new ethers.Interface(abi);
@@ -104,7 +111,7 @@ async function fetchAndProcess(fromBlock: number, toBlock: number) {
   }
 }
 
-function main() {
+async function main() {
   try {
     const mongodb_uri = process.env.MONGODB_URI;
     if (!mongodb_uri) {
@@ -113,13 +120,31 @@ function main() {
     connectDB();
     console.log("Running indexer...");
     console.log("");
-    let lastProcessed = 0;
+    let indexerState = await IndexerStateModel.findOne({
+      contractAddress: contractAddress,
+    });
+    if (!indexerState) {
+      indexerState = await IndexerStateModel.create({
+        contractAddress: contractAddress,
+      });
+    }
     setInterval(async () => {
       const latest = await provider.getBlockNumber();
-      if (latest > lastProcessed) {
-        await fetchAndProcess(lastProcessed + 1, latest);
-        lastProcessed = latest;
-      }
+      if (indexerState) {
+        if (latest > indexerState.lastProcessedBlock) {
+          await fetchAndProcess(indexerState.lastProcessedBlock + 1, latest);
+          indexerState = await IndexerStateModel.findOneAndUpdate(
+            {
+              contractAddress: contractAddress,
+            },
+            {
+              $set: {
+                lastProcessedBlock: latest,
+              },
+            }
+          );
+        }
+      } else throw new Error("Indexer state became null.");
     }, 10 * 1000);
   } catch (error) {
     console.log(error);

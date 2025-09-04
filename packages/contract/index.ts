@@ -1,5 +1,3 @@
-export const contractAddress = "0x700b6A60ce7EaaEA56F065753d8dcB9653dbAD35";
-
 export const abi = [
   {
     type: "function",

@@ -31,7 +31,7 @@ import {
 import { useWriteContract } from "wagmi";
 import { useDialog } from "@/components/ui/TransactionDialog";
 import { toast } from "sonner";
-import { wagmiContractConfig } from "@/lib/contract";
+import { abi } from "@fundify/contract";
 import { parseEther } from "viem";
 import {
   DropdownMenu,
@@ -144,9 +144,16 @@ export default function PublishProjectPage() {
       description: "Calling Fundify on Ethereum",
     });
     try {
+      const contractAddress = process.env.CONTRACT_ADDRESS;
+      if (!contractAddress) {
+        toast.error("Enviorment Error", {
+          description: "CONTRACT_ADDRESS is not set.",
+        });
+        return;
+      }
       const sig = await writeContractAsync({
-        address: wagmiContractConfig.address, // deployed contract address
-        abi: wagmiContractConfig.abi,
+        address: contractAddress as `0x${string}`,
+        abi: abi,
         functionName: "createProject",
         args: [parseEther(formData.goal), parseInt(formData.milestones)],
         gas: BigInt(300000),

@@ -1,0 +1,85 @@
+# Docker Containers
+# 1. Foundry & Anvil
+# 2. MongoDB
+# 3. Indexer
+# 4. Website
+
+version: "3.8"
+
+services:
+  ethereum:
+    image: ghcr.io/foundry-rs/foundry:latest
+    ports:
+      - "8545:8545"
+    networks:
+      - fundify-net
+    entrypoint:
+      - "anvil"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8545"
+      - "--chain-id"
+      - "1"
+
+  contract:
+    build:
+      context: contract/
+      dockerfile: contract/dockerfile
+    networks:
+      - fundify-net
+    environment:
+      - RPC_URL=ethereum:8545
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    networks:
+      - fundify-net
+    volumes:
+      - mongodb-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin@fundify
+
+  indexer:
+    build:
+      context: .
+      dockerfile: apps/indexer/dockerfile
+    networks:
+      - fundify-net
+    environment:
+      - MONGODB_URL=mongodb://admin:admin@fundify:27017/test?authSource=admin
+      - RPC_URL=ethereum:8545
+      - NODE_ENV=development
+      - CONTRACT_ADDRESS=0x700b6A60ce7EaaEA56F065753d8dcB9653dbAD35
+    depends_on:
+      - ethereum
+      - mongodb
+      - contract
+
+  website:
+    build:
+      context: .
+      dockerfile: apps/website/dockerfile
+    ports: -"3000:3000"
+    networks:
+      - fundify-net
+    environment:
+      - MONGODB_URL=mongodb://admin:admin@fundify:27017/test?authSource=admin
+      - RPC_URL=ethereum:8545
+      - NODE_ENV=development
+      - CONTRACT_ADDRESS=0x700b6A60ce7EaaEA56F065753d8dcB9653dbAD35
+    depends_on:
+      - ethereum
+      - mongodb
+      - contract
+      - indexer
+
+networks:
+  fundify-net:
+    driver: bridge
+
+volumes:
+  mongodb-data:

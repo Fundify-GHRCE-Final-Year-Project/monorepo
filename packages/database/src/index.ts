@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
-import { ProjectModel, InvestmentModel } from "./models/models.ts";
+import {
+  ProjectModel,
+  InvestmentModel,
+  UserModel,
+  IndexerStateModel,
+} from "./models/models.ts";
 
 let cached: typeof mongoose | null = null;
 
@@ -17,4 +22,10 @@ async function connectDB() {
   return cached;
 }
 
-export { ProjectModel, InvestmentModel, connectDB };
+export {
+  ProjectModel,
+  InvestmentModel,
+  UserModel,
+  IndexerStateModel,
+  connectDB,
+};
