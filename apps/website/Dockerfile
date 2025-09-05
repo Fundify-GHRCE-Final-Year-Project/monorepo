@@ -34,11 +34,10 @@ RUN npm run build -w apps/website
 # 4) Runtime: copy only what’s needed to run
 FROM node:20-alpine AS runner
 WORKDIR /app
-ENV NODE_ENV=production
-# Copy standalone server and static output
-COPY --from=build /app/out/apps/website/.next/standalone ./
-COPY --from=build /app/out/apps/website/.next/static ./.next/static
-COPY --from=build /app/out/apps/website/public ./public
+# Copy build output
+COPY --from=build /app/out/apps/website/.next ./.next
+COPY --from=build /app/out/node_modules ./node_modules
+COPY --from=build /app/out/apps/website/package.json ./package.json
 # Run as non-root for security
 RUN adduser -D nextjs
 USER nextjs
