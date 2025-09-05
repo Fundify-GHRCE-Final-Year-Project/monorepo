@@ -3,11 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAtom } from "jotai";
-import {
-  currentUserAtom,
-  successMessageAtom,
-  errorMessageAtom,
-} from "@/store/global";
+import { currentUserAtom } from "@/store/global";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,7 +42,6 @@ import { CATEGORY } from "@fundify/types";
 export default function PublishProjectPage() {
   const router = useRouter();
   const [currentUser] = useAtom(currentUserAtom);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { showLoadingDialog, hideLoadingDialog } = useDialog();
   const { writeContractAsync } = useWriteContract();
 
@@ -442,26 +437,14 @@ export default function PublishProjectPage() {
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
-                disabled={isSubmitting}
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex items-center space-x-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Publishing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Rocket className="h-4 w-4" />
-                    <span>Publish Project</span>
-                  </>
-                )}
+              <Button type="submit" className="flex items-center space-x-2">
+                <>
+                  <Rocket className="h-4 w-4" />
+                  <span>Publish Project</span>
+                </>
               </Button>
             </div>
           </form>

@@ -6,7 +6,7 @@ RUN corepack enable
 FROM base AS prune
 COPY . .
 RUN npm i -g turbo
-RUN turbo prune --scope=@fundify/indexer --docker
+RUN turbo prune --scope=indexer --docker
 
 FROM base AS deps
 WORKDIR /app/out

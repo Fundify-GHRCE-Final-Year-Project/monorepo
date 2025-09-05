@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { User, Project } from "@/types/global";
+import { User, Project } from "@fundify/types";
 
 // Hardcoded user
 const hardcodedUser: User = {
@@ -7,22 +7,18 @@ const hardcodedUser: User = {
   name: "Kartik Turak",
   country: "India",
   role: "Developer",
+  phone: "+91 1234567890",
+  address: "Nagpur, Maharashtra, India",
   skills: ["React", "Node.js", "Blockchain"],
+  experiences: [],
   linkedin: "https://linkedin.com/in/kartik",
   x: "https://twitter.com/kartik",
   github: "https://github.com/kartikturak05",
-  experiences: [], // Add an empty array or sample experiences as required by your User type
+  interests: [], // Add an empty array or sample experiences as required by your User type
 };
-
-// // User state
-// export const currentUserAtom = atom<User | null>(null);
-// export const isUserConnectedAtom = atom<boolean>(true);
-// export const userWalletAtom = atom<string | null>(null);
 
 // User state (returns hardcoded data instead of null)
 export const currentUserAtom = atom<User | null>(hardcodedUser);
-export const isUserConnectedAtom = atom<boolean>(true);
-export const userWalletAtom = atom<string | null>(hardcodedUser.wallet);
 
 // Projects state
 export const allProjectsAtom = atom<Project[]>([]);
@@ -32,8 +28,6 @@ export const selectedProjectAtom = atom<Project | null>(null);
 
 // UI state
 export const isLoadingAtom = atom<boolean>(false);
-export const errorMessageAtom = atom<string | null>(null);
-export const successMessageAtom = atom<string | null>(null);
 
 // Navigation state
 export const currentPageAtom = atom<string>("projects");

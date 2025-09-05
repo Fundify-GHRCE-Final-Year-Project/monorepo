@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 import { useAtom } from "jotai";
-import {
-  isUserConnectedAtom,
-  userWalletAtom,
-  currentUserAtom,
-  hasProjectsAtom,
-} from "@/store/global";
+import { currentUserAtom, hasProjectsAtom } from "@/store/global";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -33,8 +28,6 @@ import { useDialog } from "./ui/TransactionDialog";
 
 export function Header() {
   const router = useRouter();
-  const [isConnected, setIsConnected] = useAtom(isUserConnectedAtom);
-  const [wallet, setWallet] = useAtom(userWalletAtom);
   const [currentUser, setCurrentUser] = useAtom(currentUserAtom);
   const [hasProjects] = useAtom(hasProjectsAtom);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -55,8 +48,6 @@ export function Header() {
 
   useEffect(() => {
     if (isWalletConnected) {
-      setWallet(walletAddress as string);
-      setIsConnected(true);
       setWalletToCache(walletAddress as string);
 
       (async () => {
@@ -86,27 +77,25 @@ export function Header() {
     }
   }, [walletAddress, isWalletConnected]);
 
-    // Generate and set user data for the connected wallet
-    //   const mockUser = {
-    //     wallet: walletAddress as string,
-    //     name: "Arav Bhivgade",
-    //     country: "India",
-    //     role: "Software Engineer",
-    //     skills: ["JavaScript", "React", "TypeScript", "Node.js", "Blockchain"],
-    //     experiences: [],
-    //     linkedin: "https://linkedin.com/in/johndoe",
-    //     x: "https://x.com/johndoe",
-    //     github: "https://github.com/johndoe",
-    //   };
+  // Generate and set user data for the connected wallet
+  //   const mockUser = {
+  //     wallet: walletAddress as string,
+  //     name: "Arav Bhivgade",
+  //     country: "India",
+  //     role: "Software Engineer",
+  //     skills: ["JavaScript", "React", "TypeScript", "Node.js", "Blockchain"],
+  //     experiences: [],
+  //     linkedin: "https://linkedin.com/in/johndoe",
+  //     x: "https://x.com/johndoe",
+  //     github: "https://github.com/johndoe",
+  //   };
 
-    //   setCurrentUser(mockUser);
-    //   setUserToCache(mockUser);
-    // }
+  //   setCurrentUser(mockUser);
+  //   setUserToCache(mockUser);
+  // }
 
   const disconnectWallet = () => {
     disconnect();
-    setWallet(null);
-    setIsConnected(false);
     setCurrentUser(null);
     clearWalletCache();
     clearUserCache();
@@ -139,7 +128,7 @@ export function Header() {
               Projects
             </Link>
 
-            {isConnected && (
+            {isWalletConnected && (
               <Link
                 href="/invested-projects"
                 className="text-sm font-medium transition-colors hover:text-primary"
@@ -243,7 +232,7 @@ export function Header() {
                 </div>
               </Link>
 
-              {isConnected && (
+              {isWalletConnected && (
                 <Link
                   href="/invested-projects"
                   className="text-sm font-medium transition-colors hover:text-primary"

@@ -4,7 +4,7 @@
 import { useAtom } from "jotai";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { currentUserAtom, isUserConnectedAtom } from "@/store/global";
+import { currentUserAtom } from "@/store/global";
 import { fetchUserByWallet, useGetUserProjects } from "@/lib/hooks";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,25 +54,24 @@ interface UserData {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [isConnected] = useAtom(isUserConnectedAtom);
   const [currentUser] = useAtom(currentUserAtom);
   const { projects, isLoading, error } = useGetUserProjects();
-  
+
   // State for dynamically fetched user data
   const [fetchedUser, setFetchedUser] = useState<UserData | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(false);
   const [userError, setUserError] = useState<string | null>(null);
 
-  const { address: walletAddress } = useAccount();
+  const { address: walletAddress, isConnected } = useAccount();
 
   // Fetch user data dynamically
   useEffect(() => {
     const fetchUser = async () => {
       if (!walletAddress) return;
-      
+
       setIsUserLoading(true);
       setUserError(null);
-      
+
       try {
         const userData = await fetchUserByWallet(walletAddress);
         console.log("Fetched user data:", userData);
@@ -104,7 +103,16 @@ export default function ProfilePage() {
       isLoading,
       error,
     });
-  }, [isConnected, currentUser, fetchedUser, displayUser, walletAddress, projects, isLoading, error]);
+  }, [
+    isConnected,
+    currentUser,
+    fetchedUser,
+    displayUser,
+    walletAddress,
+    projects,
+    isLoading,
+    error,
+  ]);
 
   useEffect(() => {
     if (!isConnected) {
@@ -177,11 +185,11 @@ export default function ProfilePage() {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
-            <h2 className="text-xl font-semibold mb-2">Error Loading Profile</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              Error Loading Profile
+            </h2>
             <p className="text-muted-foreground mb-4">{userError}</p>
-            <Button onClick={() => window.location.reload()}>
-              Try Again
-            </Button>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
           </div>
         </div>
       </div>

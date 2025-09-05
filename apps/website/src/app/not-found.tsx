@@ -1,7 +1,14 @@
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Search, Home, ArrowLeft } from 'lucide-react'
+"use client";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Search, Home, ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
   return (
@@ -14,7 +21,8 @@ export default function NotFound() {
             </div>
             <CardTitle className="text-2xl">Page Not Found</CardTitle>
             <CardDescription>
-              Sorry, we couldn't find the page you're looking for. It might have been moved, deleted, or you entered the wrong URL.
+              Sorry, we couldn't find the page you're looking for. It might have
+              been moved, deleted, or you entered the wrong URL.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -23,7 +31,7 @@ export default function NotFound() {
                 Error 404 - The requested page could not be found
               </p>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-2">
               <Link href="/" className="flex-1">
                 <Button className="w-full">
@@ -31,22 +39,26 @@ export default function NotFound() {
                   Go Home
                 </Button>
               </Link>
-              <Button variant="outline" onClick={() => window.history.back()} className="flex-1">
+              <Button
+                variant="outline"
+                onClick={() => window.history.back()}
+                className="flex-1"
+              >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Go Back
               </Button>
             </div>
-            
+
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                Try visiting our{' '}
+                Try visiting our{" "}
                 <Link href="/projects" className="text-primary hover:underline">
                   projects page
-                </Link>{' '}
-                or{' '}
+                </Link>{" "}
+                or{" "}
                 <Link href="/support" className="text-primary hover:underline">
                   contact support
-                </Link>{' '}
+                </Link>{" "}
                 if you need help.
               </p>
             </div>
@@ -54,5 +66,5 @@ export default function NotFound() {
         </Card>
       </div>
     </div>
-  )
-} 
+  );
+}

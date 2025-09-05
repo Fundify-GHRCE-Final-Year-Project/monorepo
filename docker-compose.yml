@@ -4,8 +4,6 @@
 # 3. Indexer
 # 4. Website
 
-version: "3.8"
-
 services:
   ethereum:
     image: ghcr.io/foundry-rs/foundry:latest
@@ -24,8 +22,8 @@ services:
 
   contract:
     build:
-      context: contract/
-      dockerfile: contract/dockerfile
+      context: ./contract
+      dockerfile: Dockerfile
     networks:
       - fundify-net
     environment:
@@ -46,7 +44,7 @@ services:
   indexer:
     build:
       context: .
-      dockerfile: apps/indexer/dockerfile
+      dockerfile: apps/indexer/Dockerfile
     networks:
       - fundify-net
     environment:
@@ -62,8 +60,9 @@ services:
   website:
     build:
       context: .
-      dockerfile: apps/website/dockerfile
-    ports: -"3000:3000"
+      dockerfile: apps/website/Dockerfile
+    ports:
+      - "3000:3000"
     networks:
       - fundify-net
     environment:

@@ -21,12 +21,11 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useEffect } from "react";
-import { currentUserAtom, isUserConnectedAtom } from "@/store/global";
+import { currentUserAtom } from "@/store/global";
 import { useSetAtom } from "jotai";
 
 export default function HomePage() {
   const setUser = useSetAtom(currentUserAtom);
-  const setIsConnected = useSetAtom(isUserConnectedAtom);
   // useEffect(() => {
   //   const user = generateDummyUser("0x");
   //   setUser(user);

@@ -1,13 +1,14 @@
-import { User, Project } from '@/types/global';
+import { IProject } from "@fundify/database";
+import { User } from "@fundify/types";
 
 const CACHE_KEYS = {
-  USER: 'fundify_user',
-  PROJECTS: 'fundify_projects',
-  USER_PROJECTS: 'fundify_user_projects',
-  INVESTED_PROJECTS: 'fundify_invested_projects',
-  SELECTED_PROJECT: 'fundify_selected_project',
-  WALLET: 'fundify_wallet',
-  THEME: 'fundify_theme',
+  USER: "fundify_user",
+  PROJECTS: "fundify_projects",
+  USER_PROJECTS: "fundify_user_projects",
+  INVESTED_PROJECTS: "fundify_invested_projects",
+  SELECTED_PROJECT: "fundify_selected_project",
+  WALLET: "fundify_wallet",
+  THEME: "fundify_theme",
 } as const;
 
 const CACHE_DURATION = {
@@ -41,16 +42,16 @@ const getCachedData = <T>(key: string): T | null => {
   try {
     const cached = localStorage.getItem(key);
     if (!cached) return null;
-    
+
     const item: CacheItem<T> = JSON.parse(cached);
     if (!isCacheValid(item)) {
       localStorage.removeItem(key);
       return null;
     }
-    
+
     return item.data;
   } catch (error) {
-    console.error('Error reading from cache:', error);
+    console.error("Error reading from cache:", error);
     localStorage.removeItem(key);
     return null;
   }
@@ -68,7 +69,7 @@ const setCachedData = <T>(key: string, data: T, duration: number): void => {
     };
     localStorage.setItem(key, JSON.stringify(item));
   } catch (error) {
-    console.error('Error writing to cache:', error);
+    console.error("Error writing to cache:", error);
   }
 };
 
@@ -79,7 +80,7 @@ const clearCache = (key: string): void => {
   try {
     localStorage.removeItem(key);
   } catch (error) {
-    console.error('Error clearing cache:', error);
+    console.error("Error clearing cache:", error);
   }
 };
 
@@ -88,11 +89,11 @@ const clearCache = (key: string): void => {
  */
 export const clearAllCache = (): void => {
   try {
-    Object.values(CACHE_KEYS).forEach(key => {
+    Object.values(CACHE_KEYS).forEach((key) => {
       localStorage.removeItem(key);
     });
   } catch (error) {
-    console.error('Error clearing all cache:', error);
+    console.error("Error clearing all cache:", error);
   }
 };
 
@@ -110,11 +111,11 @@ export const clearUserCache = (): void => {
 };
 
 // Projects cache functions
-export const getProjectsFromCache = (): Project[] | null => {
-  return getCachedData<Project[]>(CACHE_KEYS.PROJECTS);
+export const getProjectsFromCache = (): IProject[] | null => {
+  return getCachedData<IProject[]>(CACHE_KEYS.PROJECTS);
 };
 
-export const setProjectsToCache = (projects: Project[]): void => {
+export const setProjectsToCache = (projects: IProject[]): void => {
   setCachedData(CACHE_KEYS.PROJECTS, projects, CACHE_DURATION.PROJECTS);
 };
 
@@ -123,12 +124,16 @@ export const clearProjectsCache = (): void => {
 };
 
 // User projects cache functions
-export const getUserProjectsFromCache = (): Project[] | null => {
-  return getCachedData<Project[]>(CACHE_KEYS.USER_PROJECTS);
+export const getUserProjectsFromCache = (): IProject[] | null => {
+  return getCachedData<IProject[]>(CACHE_KEYS.USER_PROJECTS);
 };
 
-export const setUserProjectsToCache = (projects: Project[]): void => {
-  setCachedData(CACHE_KEYS.USER_PROJECTS, projects, CACHE_DURATION.USER_PROJECTS);
+export const setUserProjectsToCache = (projects: IProject[]): void => {
+  setCachedData(
+    CACHE_KEYS.USER_PROJECTS,
+    projects,
+    CACHE_DURATION.USER_PROJECTS
+  );
 };
 
 export const clearUserProjectsCache = (): void => {
@@ -136,12 +141,16 @@ export const clearUserProjectsCache = (): void => {
 };
 
 // Invested projects cache functions
-export const getInvestedProjectsFromCache = (): Project[] | null => {
-  return getCachedData<Project[]>(CACHE_KEYS.INVESTED_PROJECTS);
+export const getInvestedProjectsFromCache = (): IProject[] | null => {
+  return getCachedData<IProject[]>(CACHE_KEYS.INVESTED_PROJECTS);
 };
 
-export const setInvestedProjectsToCache = (projects: Project[]): void => {
-  setCachedData(CACHE_KEYS.INVESTED_PROJECTS, projects, CACHE_DURATION.INVESTED_PROJECTS);
+export const setInvestedProjectsToCache = (projects: IProject[]): void => {
+  setCachedData(
+    CACHE_KEYS.INVESTED_PROJECTS,
+    projects,
+    CACHE_DURATION.INVESTED_PROJECTS
+  );
 };
 
 export const clearInvestedProjectsCache = (): void => {
@@ -149,12 +158,16 @@ export const clearInvestedProjectsCache = (): void => {
 };
 
 // Selected project cache functions
-export const getSelectedProjectFromCache = (): Project | null => {
-  return getCachedData<Project>(CACHE_KEYS.SELECTED_PROJECT);
+export const getSelectedProjectFromCache = (): IProject | null => {
+  return getCachedData<IProject>(CACHE_KEYS.SELECTED_PROJECT);
 };
 
-export const setSelectedProjectToCache = (project: Project): void => {
-  setCachedData(CACHE_KEYS.SELECTED_PROJECT, project, CACHE_DURATION.SELECTED_PROJECT);
+export const setSelectedProjectToCache = (project: IProject): void => {
+  setCachedData(
+    CACHE_KEYS.SELECTED_PROJECT,
+    project,
+    CACHE_DURATION.SELECTED_PROJECT
+  );
 };
 
 export const clearSelectedProjectCache = (): void => {
@@ -175,14 +188,14 @@ export const clearWalletCache = (): void => {
 };
 
 // Theme cache functions
-export const getThemeFromCache = (): 'light' | 'dark' | null => {
-  return getCachedData<'light' | 'dark'>(CACHE_KEYS.THEME);
+export const getThemeFromCache = (): "light" | "dark" | null => {
+  return getCachedData<"light" | "dark">(CACHE_KEYS.THEME);
 };
 
-export const setThemeToCache = (theme: 'light' | 'dark'): void => {
+export const setThemeToCache = (theme: "light" | "dark"): void => {
   setCachedData(CACHE_KEYS.THEME, theme, CACHE_DURATION.THEME);
 };
 
 export const clearThemeCache = (): void => {
   clearCache(CACHE_KEYS.THEME);
-}; 
+};

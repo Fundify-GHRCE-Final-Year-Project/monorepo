@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Schema, Document, Model } from "mongoose";
+import { Schema, Document } from "mongoose";
 import {
   Project,
   Investment,

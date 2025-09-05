@@ -4,12 +4,14 @@ import {
   InvestmentModel,
   UserModel,
   IndexerStateModel,
-} from "./models/models.ts";
+  IProject,
+  IInvestment,
+} from "./models/models";
 
 let cached: typeof mongoose | null = null;
 
 async function connectDB() {
-  const uri = process.env.MONGODB_URI;
+  const uri = process.env["MONGODB_URI"];
   if (!uri) throw new Error("MONGODB_URI not set.");
   if (cached) return cached;
 
@@ -29,3 +31,5 @@ export {
   IndexerStateModel,
   connectDB,
 };
+
+export type { IProject, IInvestment };

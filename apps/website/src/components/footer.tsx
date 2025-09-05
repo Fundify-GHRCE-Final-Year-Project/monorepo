@@ -1,14 +1,15 @@
-import Link from 'next/link'
-import { 
-  Github, 
-  Twitter, 
-  Linkedin, 
-  Mail, 
+"use client";
+import Link from "next/link";
+import {
+  Github,
+  Twitter,
+  Linkedin,
+  Mail,
   Heart,
   Shield,
   Zap,
-  Globe
-} from 'lucide-react'
+  Globe,
+} from "lucide-react";
 
 export function Footer() {
   return (
@@ -24,36 +25,37 @@ export function Footer() {
               <span className="text-xl font-bold gradient-text">Fundify</span>
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs">
-              The decentralized platform for funding innovative projects with cryptocurrency. 
-              Connect with investors and bring your ideas to life.
+              The decentralized platform for funding innovative projects with
+              cryptocurrency. Connect with investors and bring your ideas to
+              life.
             </p>
             <div className="flex space-x-4">
-              <Link 
-                href="https://github.com" 
+              <Link
+                href="https://github.com"
                 className="text-muted-foreground hover:text-foreground transition-colors"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <Github className="h-5 w-5" />
               </Link>
-              <Link 
-                href="https://twitter.com" 
+              <Link
+                href="https://twitter.com"
                 className="text-muted-foreground hover:text-foreground transition-colors"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <Twitter className="h-5 w-5" />
               </Link>
-              <Link 
-                href="https://linkedin.com" 
+              <Link
+                href="https://linkedin.com"
                 className="text-muted-foreground hover:text-foreground transition-colors"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <Linkedin className="h-5 w-5" />
               </Link>
-              <Link 
-                href="mailto:contact@fundify.com" 
+              <Link
+                href="mailto:contact@fundify.com"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Mail className="h-5 w-5" />
@@ -66,32 +68,32 @@ export function Footer() {
             <h3 className="font-semibold text-lg">Platform</h3>
             <ul className="space-y-2">
               <li>
-                <Link 
-                  href="/projects" 
+                <Link
+                  href="/projects"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Browse Projects
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/publish" 
+                <Link
+                  href="/publish"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Publish Project
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/how-it-works" 
+                <Link
+                  href="/how-it-works"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   How It Works
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/faq" 
+                <Link
+                  href="/faq"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   FAQ
@@ -105,32 +107,32 @@ export function Footer() {
             <h3 className="font-semibold text-lg">Resources</h3>
             <ul className="space-y-2">
               <li>
-                <Link 
-                  href="/docs" 
+                <Link
+                  href="/docs"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Documentation
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/api" 
+                <Link
+                  href="/api"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   API Reference
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/blog" 
+                <Link
+                  href="/blog"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Blog
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/support" 
+                <Link
+                  href="/support"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Support
@@ -144,32 +146,32 @@ export function Footer() {
             <h3 className="font-semibold text-lg">Company</h3>
             <ul className="space-y-2">
               <li>
-                <Link 
-                  href="/about" 
+                <Link
+                  href="/about"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   About Us
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/careers" 
+                <Link
+                  href="/careers"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Careers
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/press" 
+                <Link
+                  href="/press"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Press
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/contact" 
+                <Link
+                  href="/contact"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Contact
@@ -185,21 +187,21 @@ export function Footer() {
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
               <span>&copy; 2024 Fundify. All rights reserved.</span>
               <div className="flex items-center space-x-4">
-                <Link 
-                  href="/privacy" 
+                <Link
+                  href="/privacy"
                   className="hover:text-foreground transition-colors"
                 >
                   Privacy Policy
                 </Link>
-                <Link 
-                  href="/terms" 
+                <Link
+                  href="/terms"
                   className="hover:text-foreground transition-colors"
                 >
                   Terms of Service
                 </Link>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-6 text-sm text-muted-foreground">
               <div className="flex items-center space-x-1">
                 <Shield className="h-4 w-4" />
@@ -215,7 +217,7 @@ export function Footer() {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-4 text-center text-sm text-muted-foreground">
             <p className="flex items-center justify-center space-x-1">
               <span>Made with</span>
@@ -226,5 +228,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
-} 
+  );
+}

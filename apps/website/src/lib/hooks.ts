@@ -3,9 +3,12 @@
 import { useAtom } from "jotai";
 import { currentUserAtom } from "@/store/global";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Project } from "@fundify/types";
+import { IProject } from "@fundify/database/src/models/models";
 
 // lib/api.ts
-export async function fetchUserByWallet(wallet: string| undefined | null) {
+export async function fetchUserByWallet(wallet: string | undefined | null) {
   if (!wallet) return null;
   const res = await fetch(`/api/user/${wallet}`, { cache: "no-store" });
   if (!res.ok) {
@@ -14,7 +17,6 @@ export async function fetchUserByWallet(wallet: string| undefined | null) {
   }
   return res.json();
 }
-
 
 type InvestmentDTO = {
   funder: string;
@@ -290,4 +292,44 @@ export function useGetAllProjects(filters: ProjectFilters = {}) {
 // Simple version without filters (for backward compatibility)
 export function useGetAllProjectsSimple() {
   return useGetAllProjects();
+}
+
+export function useGetSelectedProject(owner: string, index: string) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [project, setProject] = useState<IProject | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Send filters in POST body (no URL params)
+        const res = await fetch(`/api/projects/${owner}/${index}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+        });
+
+        const json = await res.json();
+
+        if (!res.ok || !json.ok) {
+          toast.error("Server Error", {
+            description: json.error || "Failed to load project",
+          });
+        }
+
+        setProject(json.data);
+      } catch (e: any) {
+        setError(e.message || "Failed to load projects");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [owner, index]);
+
+  return { project, isLoading, error };
 }

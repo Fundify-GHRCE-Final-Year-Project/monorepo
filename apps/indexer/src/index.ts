@@ -3,28 +3,26 @@ import {
   parseProjectCreatedLog,
   parseProjectFundedLog,
   parseProjectFundsReleasedLog,
-} from "./lib/eventParsers.ts";
+} from "./lib/eventParsers";
 import { connectDB } from "@fundify/database";
 import {
   ProjectModel,
   InvestmentModel,
   IndexerStateModel,
 } from "@fundify/database";
-import { getRandomProject } from "./lib/dummyProjects.ts";
+import { getRandomProject } from "./lib/dummyProjects";
 import { ethers } from "ethers";
-import dotenv from "dotenv";
-dotenv.config();
 
-const contractAddress = process.env.CONTRACT_ADDRESS;
-if (!contractAddress) throw new Error("CONTRACT_ADDRESS is not set");
-
-const rpcUrl = process.env.RPC_URL;
+const contractAddress = process.env["CONTRACT_ADDRESS"];
+const rpcUrl = process.env["RPC_URL"];
 if (!rpcUrl) throw new Error("RPC_URL is not set");
 
 const provider = new ethers.JsonRpcProvider(rpcUrl);
 const contractInterface = new ethers.Interface(abi);
 
 async function fetchAndProcess(fromBlock: number, toBlock: number) {
+  if (!contractAddress) throw new Error("CONTRACT_ADDRESS is not set");
+
   const filter = {
     address: contractAddress,
     fromBlock,
@@ -113,7 +111,8 @@ async function fetchAndProcess(fromBlock: number, toBlock: number) {
 
 async function main() {
   try {
-    const mongodb_uri = process.env.MONGODB_URI;
+    if (!contractAddress) throw new Error("CONTRACT_ADDRESS is not set");
+    const mongodb_uri = process.env["MONGODB_URI"];
     if (!mongodb_uri) {
       throw new Error("MONGODB_URI not set.");
     }

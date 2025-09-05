@@ -1,10 +1,6 @@
-import React, {
-  useState,
-  createContext,
-  useContext,
-  useCallback,
-  useEffect,
-} from "react";
+"use client";
+
+import React, { useState, createContext, useContext } from "react";
 import { AlertTriangle, Loader2, X } from "lucide-react";
 import {
   AlertDialog,

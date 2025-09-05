@@ -9,8 +9,8 @@ FROM base AS prune
 COPY . .
 # Install turbo locally without polluting later stages
 RUN npm i -g turbo
-# Replace @fundify/website with your app name
-RUN turbo prune --scope=@fundify/website --docker
+# Replace website with your app name
+RUN turbo prune --scope=website --docker
 
 # 2) Install deps using the pruned package graph (max layer cache)
 FROM base AS deps

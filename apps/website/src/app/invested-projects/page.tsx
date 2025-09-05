@@ -1,45 +1,46 @@
 // app/invested-projects/page.tsx (Updated version)
-'use client'
+"use client";
 
-import { useGetInvestedProjects } from '@/lib/hooks'
-import { ProjectCard } from '@/components/project-card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import { 
-  Search, 
-  Grid3X3, 
+import { useGetInvestedProjects } from "@/lib/hooks";
+import { ProjectCard } from "@/components/project-card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Search,
+  Grid3X3,
   List,
   Loader2,
   AlertCircle,
   TrendingUp,
   Wallet,
-  BarChart3
-} from 'lucide-react'
-import { useState, useMemo } from 'react'
-import { useAtom } from 'jotai'
-import { currentUserAtom } from '@/store/global'
+  BarChart3,
+} from "lucide-react";
+import { useState, useMemo } from "react";
+import { useAtom } from "jotai";
+import { currentUserAtom } from "@/store/global";
 
 export default function InvestedProjectsPage() {
-  const { projects, investments, isLoading, error } = useGetInvestedProjects()
-  const [currentUser] = useAtom(currentUserAtom)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const { projects, investments, isLoading, error } = useGetInvestedProjects();
+  const [currentUser] = useAtom(currentUserAtom);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const filteredProjects = projects?.filter((project: any) => {
-    const title = (project.title ?? '').toLowerCase();
-    const description = (project.description ?? '').toLowerCase();
-    const owner = (project.owner ?? '').toLowerCase();
-    const indexStr = String(project.index ?? '');
-    const term = searchTerm.toLowerCase();
-    return (
-      title.includes(term) ||
-      description.includes(term) ||
-      owner.includes(term) ||
-      indexStr.includes(term)
-    );
-  }) || [];
+  const filteredProjects =
+    projects?.filter((project: any) => {
+      const title = (project.title ?? "").toLowerCase();
+      const description = (project.description ?? "").toLowerCase();
+      const owner = (project.owner ?? "").toLowerCase();
+      const indexStr = String(project.index ?? "");
+      const term = searchTerm.toLowerCase();
+      return (
+        title.includes(term) ||
+        description.includes(term) ||
+        owner.includes(term) ||
+        indexStr.includes(term)
+      );
+    }) || [];
 
   // Calculate investment statistics
   const investmentStats = useMemo(() => {
@@ -47,14 +48,14 @@ export default function InvestedProjectsPage() {
       return {
         totalInvested: 0,
         totalInvestments: 0,
-        averageInvestment: 0
+        averageInvestment: 0,
       };
     }
 
     const total = investments.reduce((sum, inv) => {
       try {
         // Convert BigInt string to ETH
-        const ethAmount = parseFloat(inv.amount) 
+        const ethAmount = parseFloat(inv.amount);
         return sum + ethAmount;
       } catch {
         return sum;
@@ -64,12 +65,12 @@ export default function InvestedProjectsPage() {
     return {
       totalInvested: total,
       totalInvestments: investments.length,
-      averageInvestment: total / investments.length
+      averageInvestment: total / investments.length,
     };
   }, [investments]);
 
   const formatAddress = (address: string) => {
-    if (!address) return 'Unknown';
+    if (!address) return "Unknown";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
@@ -92,16 +93,14 @@ export default function InvestedProjectsPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <AlertCircle className="h-12 w-12 text-red-500" />
-          <h2 className="text-2xl font-semibold">Error Loading Invested Projects</h2>
-          <p className="text-muted-foreground text-center max-w-md">
-            {error}
-          </p>
-          <Button onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
+          <h2 className="text-2xl font-semibold">
+            Error Loading Invested Projects
+          </h2>
+          <p className="text-muted-foreground text-center max-w-md">{error}</p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -129,24 +128,28 @@ export default function InvestedProjectsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-2 mb-2">
                   <BarChart3 className="h-5 w-5" />
                   <span className="text-sm font-medium">Total Investments</span>
                 </div>
-                <div className="text-2xl font-bold">{investmentStats.totalInvestments}</div>
+                <div className="text-2xl font-bold">
+                  {investmentStats.totalInvestments}
+                </div>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-2 mb-2">
                   <Wallet className="h-5 w-5" />
                   <span className="text-sm font-medium">Active Projects</span>
                 </div>
-                <div className="text-2xl font-bold">{filteredProjects.length}</div>
+                <div className="text-2xl font-bold">
+                  {filteredProjects.length}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -166,19 +169,19 @@ export default function InvestedProjectsPage() {
                 className="pl-10"
               />
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                variant={viewMode === "grid" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setViewMode('grid')}
+                onClick={() => setViewMode("grid")}
               >
                 <Grid3X3 className="h-4 w-4" />
               </Button>
               <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
+                variant={viewMode === "list" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode("list")}
               >
                 <List className="h-4 w-4" />
               </Button>
@@ -191,10 +194,11 @@ export default function InvestedProjectsPage() {
       {!isLoading && (
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
-            {`${filteredProjects.length} project${filteredProjects.length !== 1 ? 's' : ''} found`}
+            {`${filteredProjects.length} project${filteredProjects.length !== 1 ? "s" : ""} found`}
             {investments && investments.length > 0 && (
               <span className="ml-2">
-                • {investments.length} total investment{investments.length !== 1 ? 's' : ''}
+                • {investments.length} total investment
+                {investments.length !== 1 ? "s" : ""}
               </span>
             )}
           </p>
@@ -213,21 +217,26 @@ export default function InvestedProjectsPage() {
 
       {/* Projects Grid/List */}
       {!isLoading && filteredProjects.length > 0 && (
-        <div className={
-          viewMode === 'grid' 
-            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-            : 'space-y-4'
-        }>
+        <div
+          className={
+            viewMode === "grid"
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              : "space-y-4"
+          }
+        >
           {filteredProjects.map((project) => {
             // Find user's investments in this project
-            const userInvestments = investments?.filter(inv => 
-              inv.projectOwner.toLowerCase() === project.owner.toLowerCase() && 
-              inv.projectIndex === project.index
-            ) || [];
-            
+            const userInvestments =
+              investments?.filter(
+                (inv) =>
+                  inv.projectOwner.toLowerCase() ===
+                    project.owner.toLowerCase() &&
+                  inv.projectIndex === project.index
+              ) || [];
+
             const totalUserInvestment = userInvestments.reduce((sum, inv) => {
               try {
-                const ethAmount = parseFloat(inv.amount) 
+                const ethAmount = parseFloat(inv.amount);
                 return sum + ethAmount;
               } catch {
                 return sum;
@@ -235,15 +244,15 @@ export default function InvestedProjectsPage() {
             }, 0);
 
             return (
-              <div key={`${project.owner}-${project.index}`} className="relative">
-                <ProjectCard 
-                  project={project}
-                  viewMode={viewMode}
-                />
+              <div
+                key={`${project.owner}-${project.index}`}
+                className="relative"
+              >
+                <ProjectCard project={project} viewMode={viewMode} />
                 {/* Investment Badge */}
                 <div className="absolute top-2 right-2">
-                  <Badge 
-                    variant="secondary" 
+                  <Badge
+                    variant="secondary"
                     className="bg-green-100 text-green-800 border-green-200"
                   >
                     Invested: {totalUserInvestment.toFixed(4)} ETH
@@ -264,7 +273,9 @@ export default function InvestedProjectsPage() {
               .sort((a, b) => b.timestamp - a.timestamp) // Sort by newest first
               .slice(0, 10) // Show only recent 10 investments
               .map((investment) => (
-                <Card key={`${investment.funder}-${investment.investmentIndex}`}>
+                <Card
+                  key={`${investment.funder}-${investment.investmentIndex}`}
+                >
                   <CardContent className="flex items-center justify-between p-4">
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
@@ -275,13 +286,16 @@ export default function InvestedProjectsPage() {
                           Project by {formatAddress(investment.projectOwner)}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Project #{investment.projectIndex} • {new Date(investment.timestamp * 1000).toLocaleDateString()}
+                          Project #{investment.projectIndex} •{" "}
+                          {new Date(
+                            investment.timestamp * 1000
+                          ).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">
-                        {(parseFloat(investment.amount) / ).toFixed(4)} ETH
+                        {parseFloat(investment.amount).toFixed(4)} ETH
                       </p>
                       <Badge variant="outline" className="text-xs">
                         Investment #{investment.investmentIndex}
@@ -302,16 +316,12 @@ export default function InvestedProjectsPage() {
           </div>
           <h3 className="text-xl font-semibold">No invested projects found</h3>
           <p className="text-muted-foreground text-center max-w-md">
-            {searchTerm 
-              ? 'Try adjusting your search to find your invested projects.'
-              : 'You haven\'t invested in any projects yet. Start exploring and investing in exciting projects!'
-            }
+            {searchTerm
+              ? "Try adjusting your search to find your invested projects."
+              : "You haven't invested in any projects yet. Start exploring and investing in exciting projects!"}
           </p>
           {searchTerm && (
-            <Button 
-              variant="outline" 
-              onClick={() => setSearchTerm('')}
-            >
+            <Button variant="outline" onClick={() => setSearchTerm("")}>
               Clear Search
             </Button>
           )}
@@ -323,5 +333,5 @@ export default function InvestedProjectsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

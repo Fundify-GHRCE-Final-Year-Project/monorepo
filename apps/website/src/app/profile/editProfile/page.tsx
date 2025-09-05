@@ -138,11 +138,7 @@ export default function ProfilePage() {
       {/* Wallet (Read only) */}
       <div className="space-y-3">
         <Label>Wallet Address</Label>
-        <Input
-          className="text-lg p-3"
-          value={walletAddress}
-            readOnly
-        />
+        <Input className="text-lg p-3" value={walletAddress} readOnly />
       </div>
 
       {/* Name */}

@@ -4,9 +4,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts",
-    "build": "tsc -p tsconfig.json && node --enable-source-maps dist/index.js"
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "dev": "nodemon src/index.ts",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build"
   },
   "keywords": [],
   "author": "",
@@ -15,11 +18,13 @@
   "dependencies": {
     "@fundify/contract": "^1.0.0",
     "@fundify/database": "^1.0.0",
+    "dotenv": "^17.2.2",
     "ethers": "^6.15.0"
   },
   "devDependencies": {
-    "@types/node": "^24.3.0",
-    "tsx": "^4.20.5",
+    "@types/node": "^24.3.1",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   }
 }
