@@ -5,33 +5,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, Target, TrendingUp, User, ExternalLink } from "lucide-react";
-
-// Updated interface to match API response
-interface Project {
-  id: string;
-  owner: string;
-  index: number;
-  title: string;
-  description: string;
-  goal?: number;
-  goalETH: number;
-  funded?: number;
-  fundedETH: number;
-  milestones: number;
-  timestamp: number;
-}
+import { IProject } from "@fundify/database";
 
 interface ProjectCardProps {
-  project: Project;
+  project: IProject;
   viewMode?: "grid" | "list";
 }
 
 export function ProjectCard({ project, viewMode = "grid" }: ProjectCardProps) {
   // Safely calculate funding percentage with fallbacks
   const calculateFundingPercentage = () => {
-    if (!project.goalETH || project.goalETH === 0) return 0;
-    const funded = project.fundedETH || 0;
-    const goal = project.goalETH;
+    if (!project.goal || project.goal === 0) return 0;
+    const funded = project.funded || 0;
+    const goal = project.goal;
     return Math.min((funded / goal) * 100, 100);
   };
 
@@ -102,15 +88,15 @@ export function ProjectCard({ project, viewMode = "grid" }: ProjectCardProps) {
                 </div>
                 <div className="flex items-center space-x-1">
                   <Target className="h-4 w-4" />
-                  <span>{safeToFixed(project.goalETH)} ETH</span>
+                  <span>{safeToFixed(project.goal)} ETH</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <TrendingUp className="h-4 w-4" />
-                  <span>{safeToFixed(project.fundedETH)} ETH</span>
+                  <span>{safeToFixed(project.funded)} ETH</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Calendar className="h-4 w-4" />
-                  <span>{formatDate(project.timestamp)}</span>
+                  <span>{formatDate(Number(project.timestamp))}</span>
                 </div>
               </div>
             </div>
@@ -143,6 +129,7 @@ export function ProjectCard({ project, viewMode = "grid" }: ProjectCardProps) {
           <Badge variant={isFullyFunded ? "default" : "secondary"}>
             {isFullyFunded ? "Funded" : "Active"}
           </Badge>
+          <Badge variant="secondary">{project.category}</Badge>
         </div>
       </CardHeader>
 
@@ -154,15 +141,13 @@ export function ProjectCard({ project, viewMode = "grid" }: ProjectCardProps) {
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Goal</span>
-            <span className="font-medium">
-              {safeToFixed(project.goalETH)} ETH
-            </span>
+            <span className="font-medium">{safeToFixed(project.goal)} ETH</span>
           </div>
 
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Funded</span>
             <span className="font-medium">
-              {safeToFixed(project.fundedETH)} ETH
+              {safeToFixed(project.funded)} ETH
             </span>
           </div>
 
@@ -190,7 +175,9 @@ export function ProjectCard({ project, viewMode = "grid" }: ProjectCardProps) {
 
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Created</span>
-            <span className="font-medium">{formatDate(project.timestamp)}</span>
+            <span className="font-medium">
+              {formatDate(Number(project.timestamp))}
+            </span>
           </div>
         </div>
 

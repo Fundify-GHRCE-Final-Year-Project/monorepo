@@ -48,6 +48,7 @@ async function fetchAndProcess(fromBlock: number, toBlock: number) {
             timestamp: projectCreated.timestamp,
             title: dummyProject?.title,
             description: dummyProject?.description,
+            category: dummyProject?.category,
           });
           console.log("Saved Project To MongoDB :-");
           console.log(savedProject);
