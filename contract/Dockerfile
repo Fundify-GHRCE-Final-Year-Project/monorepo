@@ -4,7 +4,8 @@ WORKDIR /contract
 
 COPY . .
 
-WORKDIR /app/script/testing
-COPY --chmod=755 script/testing/deployment.sh .
+WORKDIR /contract/script/testing
+
+USER root
 
 CMD ["./deployment.sh"]
