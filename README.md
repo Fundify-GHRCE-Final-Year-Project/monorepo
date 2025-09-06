@@ -1,21 +1,74 @@
-This repository will have all the code for fundify. This includes -
+# 🚀 Fundify
 
-1. Website (Next.js & TypeScript)
-2. Ethereum Smart Contract (Solidity)
-3. Indexer (TypeScript)
+A comprehensive Web3 crowdfunding platform built with modern technologies and blockchain integration.
 
-Local Development Instructions :-
+## 📦 Project Structure
 
-1. Run `docker compose build` to build the docker containers
-2. Run `docker compose up` to start all containers after build
-3. Run `cd contract/script/testing && ./deployment.sh` to deploy the contract on local ethereum node
-4. Connect to local mongodb using below url and mongodb compass
-5. Open the website at below url
+This repository contains all the core components of the Fundify platform:
 
-URLs for services -
+- **🌐 Website** - Next.js & TypeScript frontend application
+- **⛓️ Smart Contract** - Ethereum smart contracts written in Solidity
+- **🔄 Indexer** - TypeScript-based blockchain event indexer
 
-1. Local Ethereum Node - http://localhost:8545
-2. MongoDB - mongodb://admin:admin@fundify@localhost:27017/test?authSource=admin
-3. Website - http://localhost:3000
+## 🛠️ Prerequisites
 
-Note - Contract container is only for deploying the contract on the local ethereum node so it doesn't expose any ports nor has one. Indexer is not a server so it doesn't expose a port either.
+Before you begin, ensure you have the following installed:
+
+- **Node.js** - Required for npm package management
+- **Docker Desktop** - Essential for local development environment
+
+## 🚀 Quick Start
+
+Follow these steps to get your local development environment running:
+
+### 1. Build Docker Containers
+
+```bash
+docker compose build
+```
+
+### 2. Start All Services
+
+```bash
+docker compose up
+```
+
+### 3. Deploy Smart Contracts
+
+```bash
+cd contract/script/testing && ./deployment.sh
+```
+
+### 4. Connect to Database
+
+Use the MongoDB connection string below with MongoDB Compass or your preferred client.
+
+### 5. Access the Application
+
+Navigate to the website URL provided below to start using Fundify locally.
+
+## 🌐 Service URLs
+
+| Service           | URL                                                                   | Description                  |
+| ----------------- | --------------------------------------------------------------------- | ---------------------------- |
+| **Website**       | http://localhost:3000                                                 | Main Fundify web application |
+| **Ethereum Node** | http://localhost:8545                                                 | Local blockchain node        |
+| **MongoDB**       | `mongodb://admin:admin@fundify@localhost:27017/test?authSource=admin` | Database connection          |
+
+## 📝 Architecture Notes
+
+- **Contract Container**: Dedicated to smart contract deployment on the local Ethereum node (no exposed ports)
+- **Indexer Service**: Processes blockchain events in the background (no exposed ports)
+- **Website**: Full-stack Next.js application with TypeScript support
+
+## 🤝 Contributing
+
+We welcome contributions! Please feel free to submit issues and pull requests.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+_Built with ❤️ for the decentralized future_
