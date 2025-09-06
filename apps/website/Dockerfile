@@ -1,50 +1,46 @@
-# syntax=docker/dockerfile:1.6
-FROM node:20-alpine AS base
-WORKDIR /app
-RUN corepack enable
+FROM node:18-alpine AS base
 
-# 1) Prune the monorepo down to just this app + its deps
-FROM base AS prune
-# Copy the entire repo into the build context (filtered by .dockerignore)
+FROM base AS builder
+RUN apk update && apk add --no-cache libc6-compat
+WORKDIR /app
+RUN npm install -g turbo
 COPY . .
-RUN npm i -g turbo
-RUN turbo prune --scope=website --docker
+RUN turbo prune website --docker
 
-# 2) Install deps using the pruned package graph
-FROM base AS deps
-WORKDIR /app/out
-COPY --from=prune /app/out/json/ ./
-COPY --from=prune /app/out/package-lock.json ./package-lock.json
-RUN --mount=type=cache,target=/root/.npm npm ci
-
-# 3) Build shared packages first, then website
-FROM base AS build
-WORKDIR /app/out
-COPY --from=prune /app/out/full/ ./
-COPY --from=deps  /app/out/node_modules ./node_modules
-
-# Build shared packages used by website
-RUN npm run build -w packages/contract \
-    && npm run build -w packages/database \
-    && npm run build -w packages/types
-
-# Now build the website (Next.js standalone mode expected)
-RUN npm run build -w apps/website
-
-# 4) Runtime: copy only what’s needed to run
-FROM node:20-alpine AS runner
+FROM base AS installer
+RUN apk update && apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy website build output
-COPY --from=build /app/out/apps/website/.next ./.next
-COPY --from=build /app/out/apps/website/package.json ./package.json
+# Copy package files
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/package-lock.json ./
+RUN npm install
 
-# Copy only the built shared packages (not the entire source)
-COPY --from=build /app/out/node_modules ./node_modules
+# Copy source code
+COPY --from=builder /app/out/full/ .
 
-# Run as non-root
-RUN adduser -D nextjs
-USER nextjs
+# Install turbo locally for this stage
+RUN npm install turbo
 
-EXPOSE 3000
-CMD ["npm", "run", "start",]
+# Build with turbo
+RUN npx turbo run build --filter=website...
+
+FROM base AS runner
+WORKDIR /app
+
+# Copy only necessary files
+COPY --from=installer /app/node_modules ./node_modules
+COPY --from=installer /app/apps/website/.next ./.next
+COPY --from=installer /app/apps/website/package.json .
+COPY --from=installer /app/packages/contract/dist ./packages/contract/dist
+COPY --from=installer /app/packages/contract/package.json ./packages/contract/package.json
+COPY --from=installer /app/packages/database/dist ./packages/database/dist
+COPY --from=installer /app/packages/database/package.json ./packages/database/package.json
+COPY --from=installer /app/packages/types/dist ./packages/types/dist
+COPY --from=installer /app/packages/types/package.json ./packages/types/package.json
+
+# Set NODE_PATH to help with module resolution
+ENV NODE_PATH=/app/node_modules
+
+# Run npm run start to run next start
+CMD ["npm", "run", "start"]
