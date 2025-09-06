@@ -1,8 +1,7 @@
 {
   "name": "indexer",
   "version": "1.0.0",
-  "main": "index.js",
-  "type": "module",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
@@ -22,6 +21,7 @@
     "ethers": "^6.15.0"
   },
   "devDependencies": {
+    "@fundify/tsconfig": "^1.0.0",
     "@types/node": "^24.3.1",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",

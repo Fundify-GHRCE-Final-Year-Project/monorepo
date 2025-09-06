@@ -1,31 +1,46 @@
-# syntax=docker/dockerfile:1.6
-FROM node:20-alpine AS base
-WORKDIR /app
-RUN corepack enable
+FROM node:18-alpine AS base
 
-FROM base AS prune
+FROM base AS builder
+RUN apk update && apk add --no-cache libc6-compat
+WORKDIR /app
+RUN npm install -g turbo
 COPY . .
-RUN npm i -g turbo
-RUN turbo prune --scope=indexer --docker
+RUN turbo prune indexer --docker
 
-FROM base AS deps
-WORKDIR /app/out
-COPY --from=prune /app/out/json/ ./
-COPY --from=prune /app/out/package-lock.json ./package-lock.json
-RUN --mount=type=cache,target=/root/.npm npm ci
-
-FROM base AS build
-WORKDIR /app/out
-COPY --from=prune /app/out/full/ ./
-COPY --from=deps  /app/out/node_modules ./node_modules
-# Compile TS, etc. Use workspace or turbo to scope:
-RUN npm run build -w apps/indexer
-# e.g. emits apps/indexer/dist
-
-FROM node:20-alpine AS runner
+FROM base AS installer
+RUN apk update && apk add --no-cache libc6-compat
 WORKDIR /app
-# Copy only the built service + any runtime files it needs
-COPY --from=build /app/out/apps/indexer/dist ./dist
-# If the app reads runtime env vars, no need to bundle .env; pass via Compose
-USER node
-CMD ["npm", "run", "start"]
+
+# Copy package files
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/package-lock.json ./
+RUN npm install
+
+# Copy source code
+COPY --from=builder /app/out/full/ .
+
+# Install turbo locally for this stage
+RUN npm install turbo
+
+# Build with turbo
+RUN npx turbo run build --filter=indexer...
+
+FROM base AS runner
+WORKDIR /app
+
+# Copy only necessary files
+COPY --from=installer /app/node_modules ./node_modules
+COPY --from=installer /app/apps/indexer/dist ./dist
+COPY --from=installer /app/apps/indexer/package.json .
+COPY --from=installer /app/packages/contract/dist ./packages/contract/dist
+COPY --from=installer /app/packages/contract/package.json ./packages/contract/package.json
+COPY --from=installer /app/packages/database/dist ./packages/database/dist
+COPY --from=installer /app/packages/database/package.json ./packages/database/package.json
+COPY --from=installer /app/packages/types/dist ./packages/types/dist
+COPY --from=installer /app/packages/types/package.json ./packages/types/package.json
+
+# Set NODE_PATH to help with module resolution
+ENV NODE_PATH=/app/node_modules
+
+# Use node directly instead of npm start
+CMD ["node", "dist/index.js"]
