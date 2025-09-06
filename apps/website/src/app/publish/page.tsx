@@ -229,14 +229,14 @@ export default function PublishProjectPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <label
-                      htmlFor="title"
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Project Title *
-                    </label>
+                <div>
+                  <label
+                    htmlFor="title"
+                    className="block text-sm font-medium mb-2"
+                  >
+                    Project Title *
+                  </label>
+                  <div className="flex items-center gap-4">
                     <Input
                       id="title"
                       placeholder="Enter your project title"
@@ -244,40 +244,46 @@ export default function PublishProjectPage() {
                       onChange={(e) =>
                         handleInputChange("title", e.target.value)
                       }
-                      className={errors.title ? "border-red-500" : ""}
+                      className={errors.title ? "border-red-500 w-50" : "w-50"}
                     />
-                    {errors.title && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {errors.title}
-                      </p>
-                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="h-10 w-56 px-4 border border-gray rounded-lg">
+                        {formData.category == "" ? (
+                          <div className="flex justify-between items-center h-full">
+                            <div>Select Category</div>
+                            <div className="flex items-center h-full">
+                              <ChevronDown className="h-4 w-4" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex justify-between items-center h-full">
+                            <div>{formData.category}</div>
+                            <div className="flex items-center h-full">
+                              <ChevronDown className="h-4 w-4" />
+                            </div>
+                          </div>
+                        )}
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56">
+                        {Object.values(CATEGORY).map((c) => (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setFormData((val) => ({
+                                ...val,
+                                category: c,
+                              }));
+                            }}
+                          >
+                            {c}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger>
-                      {formData.category == "" ? (
-                        <span className="flex justify-between">
-                          <span>Select Category</span>
-                          <ChevronDown className="h-4 w-4" />
-                        </span>
-                      ) : (
-                        formData.category
-                      )}
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      {Object.values(CATEGORY).map((c) => (
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setFormData((val) => ({
-                              ...val,
-                              category: c,
-                            }));
-                          }}
-                        >
-                          {c}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+
+                  {errors.title && (
+                    <p className="text-sm text-red-500 mt-1">{errors.title}</p>
+                  )}
                 </div>
 
                 <div>
