@@ -70,17 +70,6 @@ const UserSchema = new Schema<User>(
   { timestamps: true }
 );
 
-const IndexerState = new Schema(
-  {
-    contractAddress: { type: String, required: true, default: "0x" },
-    lastProcessedBlock: { type: Number, required: true, default: 0 },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-export const IndexerStateModel = mongoose.model("IndexerState", IndexerState);
 export const UserModel = mongoose.model("User", UserSchema);
 export const ProjectModel = mongoose.model("Project", ProjectSchema);
 export const InvestmentModel = mongoose.model("Investment", InvestmentSchema);

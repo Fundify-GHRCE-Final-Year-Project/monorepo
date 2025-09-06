@@ -1,4 +1,4 @@
-# 🚀 Fundify
+<center><img src="./assets/fundify-non-transparent-cropped.png" alt="Fundify Logo" width="400"/></center>
 
 A comprehensive Web3 crowdfunding platform built with modern technologies and blockchain integration.
 
@@ -21,7 +21,7 @@ Before you begin, ensure you have the following installed:
 
 Follow these steps to get your local development environment running:
 
-### 1. Build Docker Containers
+### 1. Build All Docker Containers
 
 ```bash
 docker compose build
@@ -33,27 +33,51 @@ docker compose build
 docker compose up
 ```
 
-### 3. Deploy Smart Contracts
-
-```bash
-cd contract/script/testing && ./deployment.sh
-```
-
-### 4. Connect to Database
+### 3. Connect to Database
 
 Use the MongoDB connection string below with MongoDB Compass or your preferred client.
 
-### 5. Access the Application
+### 4. Access the Application
 
 Navigate to the website URL provided below to start using Fundify locally.
 
 ## 🌐 Service URLs
 
-| Service           | URL                                                                   | Description                  |
-| ----------------- | --------------------------------------------------------------------- | ---------------------------- |
-| **Website**       | http://localhost:3000                                                 | Main Fundify web application |
-| **Ethereum Node** | http://localhost:8545                                                 | Local blockchain node        |
-| **MongoDB**       | `mongodb://admin:admin@fundify@localhost:27017/test?authSource=admin` | Database connection          |
+| Service      | URL                                                           | Description                                         |
+| ------------ | ------------------------------------------------------------- | --------------------------------------------------- |
+| **website**  | http://localhost:3000                                         | Main Fundify web application                        |
+| **ethereum** | http://localhost:8545                                         | Local blockchain node                               |
+| **mongodb**  | `mongodb://admin:admin@localhost:27017/test?authSource=admin` | Database connection                                 |
+| **contract** | No URL                                                        | Smart Contract Deployer                             |
+| **indexer**  | No URL                                                        | Indexes data from blockchain and stored in database |
+
+## 🐋 Docker Instructions
+
+**Note - Container names are listed above in the table**
+
+### Rebuild Specific Container
+
+```bash
+docker compose build <name>
+```
+
+### Start Specific Container
+
+```bash
+docker compose up -d <name>
+```
+
+### Restart Specific Container
+
+```bash
+docker compose restart <name>
+```
+
+### Stop Specific Container
+
+```bash
+docker compose stop <name>
+```
 
 ## 📝 Architecture Notes
 
@@ -67,7 +91,7 @@ We welcome contributions! Please feel free to submit issues and pull requests.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE.txt) file for details.
 
 ---
 

@@ -49,11 +49,9 @@ services:
       - "27017:27017"
     networks:
       - fundify-net
-    volumes:
-      - mongodb-data:/data/db
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin@fundify
+      MONGO_INITDB_ROOT_PASSWORD: admin
 
   indexer:
     build:
@@ -62,7 +60,7 @@ services:
     networks:
       - fundify-net
     environment:
-      - MONGODB_URI=mongodb://admin:admin@fundify:27017/test?authSource=admin
+      - MONGODB_URI=mongodb://admin:admin@mongodb:27017/test?authSource=admin
       - RPC_URL=http://ethereum:8545
       - NODE_ENV=development
       - CONTRACT_ADDRESS=0x700b6A60ce7EaaEA56F065753d8dcB9653dbAD35
@@ -80,7 +78,7 @@ services:
     networks:
       - fundify-net
     environment:
-      - MONGODB_URL=mongodb://admin:admin@fundify:27017/test?authSource=admin
+      - MONGODB_URI=mongodb://admin:admin@mongodb:27017/test?authSource=admin
       - RPC_URL=http://ethereum:8545
       - NODE_ENV=development
       - CONTRACT_ADDRESS=0x700b6A60ce7EaaEA56F065753d8dcB9653dbAD35
@@ -93,6 +91,3 @@ services:
 networks:
   fundify-net:
     driver: bridge
-
-volumes:
-  mongodb-data:

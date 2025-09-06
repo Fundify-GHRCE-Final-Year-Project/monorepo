@@ -3,7 +3,6 @@ import {
   ProjectModel,
   InvestmentModel,
   UserModel,
-  IndexerStateModel,
   IProject,
   IInvestment,
 } from "./models/models";
@@ -24,12 +23,6 @@ async function connectDB() {
   return cached;
 }
 
-export {
-  ProjectModel,
-  InvestmentModel,
-  UserModel,
-  IndexerStateModel,
-  connectDB,
-};
+export { ProjectModel, InvestmentModel, UserModel, connectDB };
 
 export type { IProject, IInvestment };

@@ -5,11 +5,7 @@ import {
   parseProjectFundsReleasedLog,
 } from "./lib/eventParsers";
 import { connectDB } from "@fundify/database";
-import {
-  ProjectModel,
-  InvestmentModel,
-  IndexerStateModel,
-} from "@fundify/database";
+import { ProjectModel, InvestmentModel } from "@fundify/database";
 import { getRandomProject } from "./lib/dummyProjects";
 import { ethers } from "ethers";
 
@@ -116,34 +112,16 @@ async function main() {
     if (!mongodb_uri) {
       throw new Error("MONGODB_URI not set.");
     }
-    connectDB();
+    await connectDB();
     console.log("Running indexer...");
     console.log("");
-    let indexerState = await IndexerStateModel.findOne({
-      contractAddress: contractAddress,
-    });
-    if (!indexerState) {
-      indexerState = await IndexerStateModel.create({
-        contractAddress: contractAddress,
-      });
-    }
+    let lastProcessedBlock = 0;
     setInterval(async () => {
       const latest = await provider.getBlockNumber();
-      if (indexerState) {
-        if (latest > indexerState.lastProcessedBlock) {
-          await fetchAndProcess(indexerState.lastProcessedBlock + 1, latest);
-          indexerState = await IndexerStateModel.findOneAndUpdate(
-            {
-              contractAddress: contractAddress,
-            },
-            {
-              $set: {
-                lastProcessedBlock: latest,
-              },
-            }
-          );
-        }
-      } else throw new Error("Indexer state became null.");
+      if (latest > lastProcessedBlock) {
+        await fetchAndProcess(lastProcessedBlock + 1, latest);
+        lastProcessedBlock = latest;
+      }
     }, 10 * 1000);
   } catch (error) {
     console.log(error);
