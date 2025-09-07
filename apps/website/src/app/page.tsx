@@ -243,7 +243,7 @@ export default function HomePage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="text-lg px-8 py-6 border-white text-white hover:bg-white hover:text-blue-600"
+                className="text-lg px-8 py-6 border-white text-black hover:bg-white hover:text-blue-600"
               >
                 Explore Projects
                 <ArrowRight className="ml-2 h-5 w-5" />

@@ -24,6 +24,7 @@ function transformProject(project: any) {
     timestamp: projectData.timestamp,
     title: projectData.title || `Project ${projectData.index}`,
     description: projectData.description || `Project by ${projectData.owner}`,
+    category: projectData.category,
     fundedETH: funded,
     goalETH: goal,
     releasedETH: released,
@@ -121,7 +122,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Error in POST /api/projects:", error);
     return NextResponse.json(
-      { ok: false, error: "Failed to fetch projects" },
+      { ok: false, error: error },
       { status: 500 }
     );
   }

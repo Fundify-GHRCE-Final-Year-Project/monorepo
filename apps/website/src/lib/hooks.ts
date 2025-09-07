@@ -271,6 +271,7 @@ export function useGetAllProjects(filters: ProjectFilters = {}) {
         const json = await res.json();
 
         if (!res.ok || !json.ok) {
+          console.log(json);
           throw new Error(json.error || "Failed to load projects");
         }
 

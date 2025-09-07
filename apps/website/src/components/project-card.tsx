@@ -126,10 +126,12 @@ export function ProjectCard({ project, viewMode = "grid" }: ProjectCardProps) {
           <CardTitle className="text-lg line-clamp-2">
             {project.title}
           </CardTitle>
-          <Badge variant={isFullyFunded ? "default" : "secondary"}>
-            {isFullyFunded ? "Funded" : "Active"}
-          </Badge>
-          <Badge variant="secondary">{project.category}</Badge>
+          <div>
+            <Badge variant="default" className="mr-4">{project.category}</Badge>
+            <Badge variant={isFullyFunded ? "default" : "secondary"}>
+              {isFullyFunded ? "Funded" : "Active"}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
 
