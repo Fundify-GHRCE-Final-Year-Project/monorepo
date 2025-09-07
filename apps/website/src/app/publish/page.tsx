@@ -93,6 +93,10 @@ export default function PublishProjectPage() {
       newErrors.description = "Project description is required";
     }
 
+    if (formData.category == "") {
+      newErrors.title = "Project category is required";
+    }
+
     if (!formData.goal || parseFloat(formData.goal) <= 0) {
       newErrors.goal = "Valid funding goal is required";
     }
@@ -139,7 +143,7 @@ export default function PublishProjectPage() {
       description: "Calling Fundify on Ethereum",
     });
     try {
-      const contractAddress = process.env.CONTRACT_ADDRESS;
+      const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
       if (!contractAddress) {
         toast.error("Enviorment Error", {
           description: "CONTRACT_ADDRESS is not set.",

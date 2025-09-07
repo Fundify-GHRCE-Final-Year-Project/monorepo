@@ -10,6 +10,7 @@ export async function GET(
   console.log("API Route: GET /api/users/[address]/projects called");
 
   try {
+    await connectDB();
     const { address } = params;
     console.log("API Route: Address received:", address);
 

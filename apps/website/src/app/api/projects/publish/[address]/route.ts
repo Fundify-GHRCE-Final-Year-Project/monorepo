@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ProjectModel } from "@fundify/database";
+import { connectDB, ProjectModel } from "@fundify/database";
 import { CATEGORY } from "@fundify/types";
 import { title } from "process";
 
@@ -8,6 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ address: string; index: string }> }
 ) {
   try {
+    await connectDB();
     // extract parmeters from request
     const { address, index } = await params;
     const body = await request.json();

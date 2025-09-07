@@ -79,9 +79,9 @@ services:
       - fundify-net
     environment:
       - MONGODB_URI=mongodb://admin:admin@mongodb:27017/test?authSource=admin
-      - RPC_URL=http://ethereum:8545
+      - NEXT_PUBLIC_RPC_URL=http://ethereum:8545
       - NODE_ENV=development
-      - CONTRACT_ADDRESS=0x700b6A60ce7EaaEA56F065753d8dcB9653dbAD35
+      - NEXT_PUBLIC_CONTRACT_ADDRESS=0x700b6A60ce7EaaEA56F065753d8dcB9653dbAD35
     depends_on:
       - ethereum
       - contract
