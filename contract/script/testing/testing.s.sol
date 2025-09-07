@@ -3,6 +3,7 @@ pragma solidity ^0.8.22;
 
 import "forge-std/Script.sol";
 import "../../src/Fundify.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract DeployAndCreateFundify is Script {
     function run() external {
@@ -18,8 +19,12 @@ contract DeployAndCreateFundify is Script {
         vm.startBroadcast(userPrivateKey);
 
         Fundify fundify = new Fundify();
-        fundify.initialize();
-        console.log("Fundify deployed at:", address(fundify));
+        bytes memory data = abi.encodeWithSelector(
+            Fundify.initialize.selector
+        );
+        ERC1967Proxy proxy = new ERC1967Proxy(address(fundify), data);
+        fundify = Fundify(address(proxy));
+        console.log("Fundify deployed at:", address(proxy));
 
         fundify.createProject(10 ether, 2);
         fundify.createProject(5 ether, 3);
