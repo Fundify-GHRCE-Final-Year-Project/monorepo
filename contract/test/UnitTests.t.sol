@@ -73,6 +73,10 @@ contract UnitTests is TestSetUp {
         assertEq(projectIndex, 0, "Wrong invested project index");
         assertEq(amount, investment, "Wrong invested amount");
 
+        uint256 totalInvestors = fundify.investorCount(projectPublisher, 0);
+        assertEq(totalInvestors, 1, "Wrong Total Investors");
+        console.log("Total Investors: %d", totalInvestors);
+
         balance = user.balance;
         assertEq(balance, initialBalance - investment, "Wrong initial eth balance");
 
@@ -86,33 +90,70 @@ contract UnitTests is TestSetUp {
     }
 
     function testProjectFundReleasing() public {
+        // Create a project
         vm.startPrank(projectPublisher);
 
         uint256 _goal = 10 ether;
-        uint256 _milestones = 5;
+        uint256 _milestones = 4;
         fundify.createProject(_goal, _milestones);
 
         vm.stopPrank();
 
-        vm.startPrank(user);
+        // 3 people invest
+        address investor1 = address(23821);
+        address investor2 = address(23822);
+        address investor3 = address(23823);
+        uint256 investment = 1 ether;
 
-        uint256 investment = 3 ether;
+        vm.deal(investor1, initialBalance);
+        vm.deal(investor2, initialBalance);
+        vm.deal(investor3, initialBalance);
+
+        vm.startPrank(investor1);
         fundify.fundProject{value: investment}(projectPublisher, 0);
-
         vm.stopPrank();
+        vm.startPrank(investor2);
+        fundify.fundProject{value: investment}(projectPublisher, 0);
+        vm.stopPrank();
+        vm.startPrank(investor3);
+        fundify.fundProject{value: investment}(projectPublisher, 0);
+        vm.stopPrank();
+
+        // Check total investors count
+        uint256 investorCount = fundify.investorCount(projectPublisher, 0);
+        assertEq(investorCount, 3, "Wrong investor count value");
+
+        // Project owner initiates release request
+        address personalWallet = address(82739273);
+        uint256 releaseAmount = 1 ether;
+        vm.startPrank(projectPublisher);
+        fundify.releaseFunds(0, releaseAmount, personalWallet, true);
+        vm.stopPrank();
+
+        // Investors vote
+        vm.startPrank(investor1);
+        fundify.voteOnReleaseRequest(projectPublisher, 0);
+        vm.stopPrank();
+        vm.startPrank(investor2);
+        fundify.voteOnReleaseRequest(projectPublisher, 0);
+        vm.stopPrank();
+        vm.startPrank(investor3);
+        fundify.voteOnReleaseRequest(projectPublisher, 0);
+        vm.stopPrank();
+
+        // Forward by 7 days
+        vm.warp(block.timestamp + 7.1 days);
+
+        // User claims the release funds
+        uint256 balance = personalWallet.balance;
+        assertEq(balance, 0, "Wrong initial personalWallet eth balance");
 
         vm.startPrank(projectPublisher);
-
-        uint256 balance = treasury.balance;
-        assertEq(balance, 0, "1: Wrong Treasury Balance");
-
-        uint256 fundsToBeReleased = 1 ether;
-        fundify.releaseFunds(0, fundsToBeReleased, treasury);
-
-        balance = treasury.balance;
-        assertEq(balance, fundsToBeReleased, "2: Wrong Treasury Balance");
-
+        fundify.releaseFunds(0, releaseAmount, personalWallet, false);
         vm.stopPrank();
+
+        balance = personalWallet.balance;
+        assertEq(balance, releaseAmount, "Wrong final personalWallet eth balance");
     }
 
     function testProjectFundReleasingInvalidInputs() public {

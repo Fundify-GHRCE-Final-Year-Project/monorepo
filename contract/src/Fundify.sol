@@ -24,8 +24,21 @@ struct Investment {
 contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     mapping(address => mapping(uint256 => Project)) public projects;
     mapping(address => uint256) public projectCount;
+    mapping(address => mapping(uint256 => bool)) projectAbandoned;
+
     mapping(address => mapping(uint256 => Investment)) public investments;
     mapping(address => uint256) public investmentCount;
+    mapping(address => mapping(uint256 => uint256)) public investorCount;
+    mapping(address => mapping(uint256 => mapping(address => uint256))) investmentWithdrawn;
+
+    mapping(address => mapping(uint256 => uint256)) public votingCycle;
+    mapping(address => mapping(uint256 => mapping(uint256 => uint256))) public votingDeadline;
+    mapping(address => mapping(uint256 => mapping(uint256 => uint256))) public votes;
+    mapping(address => mapping(uint256 => mapping(uint256 => mapping(address => bool)))) public voted;
+
+    uint256 public VOTING_DEADLINE = 7 days;
+    uint256 public VOTING_COOLDOWN = 7 days;
+    uint256 public REQUIRED_VOTES = 60;
 
     error InvalidGoalInput();
     error InvalidMilestonesInput();
@@ -37,8 +50,20 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     error AmountExceedsProjectGoal();
     error AmountExceedsProjectFund();
     error ProjectEnded();
+    error NoFunds();
+    error ProjectEmpty();
 
     error EthereumTransferFailed();
+
+    error OnCooldown();
+    error NotEnoughVotes();
+    error VotingCycleNotEnded();
+    error VotingCycleGoingOn();
+    error VotingCycleEnded();
+    error AlreadyVoted();
+    error MilestoneNotReached();
+    error ProjectAbandoned();
+    error ProjectNotAbandoned();
 
     event ProjectCreated(
         address owner,
@@ -68,6 +93,9 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     function initialize() public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+        VOTING_DEADLINE = 7 days;
+        VOTING_COOLDOWN = 7 days;
+        REQUIRED_VOTES = 60;
     }
 
     function createProject(uint256 _goal, uint256 _milestones) public {
@@ -99,6 +127,7 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     ) external payable {
         if (_projectOwner == address(0)) revert InvalidAddressInput();
         if (projectCount[_projectOwner] < _projectIndex + 1) revert InvalidIndexInput();
+        if (projectAbandoned[_projectOwner][_projectIndex]) revert ProjectAbandoned();
         if (msg.value == 0) revert InvalidFundingAmount();
 
         Project storage project = projects[_projectOwner][_projectIndex];
@@ -107,13 +136,13 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         if (amountAfterFunding > project.goal) revert AmountExceedsProjectGoal();
 
         uint256 investmentIndex = investmentCount[msg.sender]++;
-        Investment storage investment = investments[msg.sender][
-            investmentIndex
-        ];
+        Investment storage investment = investments[msg.sender][investmentIndex];
         investment.projectOwner = _projectOwner;
         investment.projectIndex = _projectIndex;
         investment.amount += msg.value;
         project.funded = amountAfterFunding;
+
+        investorCount[_projectOwner][_projectIndex] += 1;
         
         emit ProjectFunded(
             msg.sender,
@@ -125,29 +154,106 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         );
     }
 
+    function voteOnReleaseRequest(
+        address _projectOwner,
+        uint256 _projectIndex
+    ) external {
+        if (projectAbandoned[_projectOwner][_projectIndex]) revert ProjectAbandoned();
+        uint256 cycle = votingCycle[_projectOwner][_projectIndex];
+        uint256 deadline = votingDeadline[_projectOwner][_projectIndex][cycle];
+        if (block.timestamp > deadline) revert VotingCycleEnded();
+        bool hasVoted = voted[_projectOwner][_projectIndex][cycle][msg.sender];
+        if (hasVoted) revert AlreadyVoted();
+        else {
+            voted[_projectOwner][_projectIndex][cycle][msg.sender] = true;
+            votes[_projectOwner][_projectIndex][cycle] += 1;
+        }
+    }
+
     function releaseFunds(
         uint256 _projectIndex,
         uint256 _amount,
-        address to
+        address _to,
+        bool initiate
     ) external payable {
-        if (_amount == 0) revert InvalidAmountInput();
-        if (to == address(0)) revert InvalidAddressInput();
-        if (projectCount[msg.sender] < _projectIndex + 1) revert InvalidIndexInput();
+        if (projectAbandoned[msg.sender][_projectIndex]) revert ProjectAbandoned();
         Project storage project = projects[msg.sender][_projectIndex];
-        if (project.goal - project.funded == 0) revert ProjectEnded();
         uint256 remainingAmount = project.funded - project.released;
+        if (remainingAmount == 0) revert NoFunds();
+        if (projectCount[msg.sender] < _projectIndex + 1) revert InvalidIndexInput();
+
+        if (initiate) {
+            uint256 milestoneAmount = project.goal / project.milestones;
+            if (remainingAmount < milestoneAmount) revert MilestoneNotReached();
+
+            uint256 cycle = votingCycle[msg.sender][_projectIndex];
+            uint256 deadline = votingDeadline[msg.sender][_projectIndex][cycle];
+            if (block.timestamp <= deadline) revert VotingCycleGoingOn();
+
+            votingCycle[msg.sender][_projectIndex] += 1;
+            cycle = votingCycle[msg.sender][_projectIndex];
+            votingDeadline[msg.sender][_projectIndex][cycle] = block.timestamp + VOTING_COOLDOWN;
+        }
+        else {
+            uint256 cycle = votingCycle[msg.sender][_projectIndex];
+            uint256 deadline = votingDeadline[msg.sender][_projectIndex][cycle];
+            if (block.timestamp <= deadline) revert VotingCycleNotEnded();
+
+            uint256 votesGathered = votes[msg.sender][_projectIndex][cycle];
+            uint256 requiredVotes = (investorCount[msg.sender][_projectIndex] * REQUIRED_VOTES) / 100;
+            if (votesGathered >= requiredVotes) {
+                _releaseFunds(project, _amount, _to);
+            }
+            else revert NotEnoughVotes();
+        }
+    }
+
+    function _releaseFunds(
+        Project storage _project,
+        uint256 _amount,
+        address _to
+    ) internal {
+        if (_amount == 0) revert InvalidAmountInput();
+        if (_to == address(0)) revert InvalidAddressInput();
+
+        uint256 remainingAmount = _project.funded - _project.released;
         if (remainingAmount < _amount) revert AmountExceedsProjectFund();
 
-        project.released += _amount;
-        (bool sent, ) = payable(to).call{value: _amount}("");
+        _project.released += _amount;
+        (bool sent, ) = payable(_to).call{value: _amount}("");
         if (!sent) revert EthereumTransferFailed();
 
         emit ProjectFundsReleased(
             msg.sender,
-            _projectIndex,
+            _project.index,
             _amount,
-            to,
+            _to,
             block.timestamp
         );
+    }
+
+    function abandonProject(uint256 _projectIndex) external {
+        if (projectCount[msg.sender] < _projectIndex + 1) revert InvalidIndexInput();
+        projectAbandoned[msg.sender][_projectIndex] = true;
+    }
+
+    function withdrawFunds(
+        address _projectOwner,
+        uint256 _projectIndex
+    ) external payable {
+        if (!projectAbandoned[_projectOwner][_projectIndex]) revert ProjectNotAbandoned();
+        Project storage project = projects[_projectOwner][_projectIndex];
+        uint256 investmentIndex = investmentCount[msg.sender];
+        Investment storage investment = investments[msg.sender][investmentIndex];
+        uint256 remainingAmount = project.funded - project.released;
+        if (remainingAmount == 0) revert ProjectEmpty();
+        if (remainingAmount < investment.amount) {
+            (bool sent, ) = payable(msg.sender).call{value: remainingAmount}("");
+            if (!sent) revert EthereumTransferFailed();
+        }
+        else {
+            (bool sent, ) = payable(msg.sender).call{value: investment.amount}("");
+            if (!sent) revert EthereumTransferFailed();
+        }
     }
 }

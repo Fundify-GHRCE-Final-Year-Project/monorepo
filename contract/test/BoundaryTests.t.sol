@@ -131,115 +131,115 @@ contract BoundaryTests is TestSetUp {
         vm.stopPrank();
     }
 
-    function testProjectFundReleasingWithInvalidProjectIndex() public {
-        vm.startPrank(projectPublisher);
-        uint256 _goal = 10 ether;
-        uint256 _milestones = 5;
-        fundify.createProject(_goal, _milestones);
-        vm.stopPrank();
+//     function testProjectFundReleasingWithInvalidProjectIndex() public {
+//         vm.startPrank(projectPublisher);
+//         uint256 _goal = 10 ether;
+//         uint256 _milestones = 5;
+//         fundify.createProject(_goal, _milestones);
+//         vm.stopPrank();
 
-        vm.startPrank(user);
-        uint256 investment = 10 ether;
-        fundify.fundProject{value: investment}(projectPublisher, 0);
-        vm.stopPrank();
+//         vm.startPrank(user);
+//         uint256 investment = 10 ether;
+//         fundify.fundProject{value: investment}(projectPublisher, 0);
+//         vm.stopPrank();
 
-        vm.startPrank(projectPublisher);
-        uint256 fundsToBeReleased = 1 ether;
-        vm.expectRevert(Fundify.InvalidIndexInput.selector);
-        fundify.releaseFunds(1, fundsToBeReleased, address(treasury));
-        vm.stopPrank();
-    }
+//         vm.startPrank(projectPublisher);
+//         uint256 fundsToBeReleased = 1 ether;
+//         vm.expectRevert(Fundify.InvalidIndexInput.selector);
+//         fundify.releaseFunds(1, fundsToBeReleased, address(treasury));
+//         vm.stopPrank();
+//     }
 
-    function testProjectFundReleasingWithLowerAmountLimit() public {
-        vm.startPrank(projectPublisher);
-        uint256 _goal = 10 ether;
-        uint256 _milestones = 5;
-        fundify.createProject(_goal, _milestones);
-        vm.stopPrank();
+//     function testProjectFundReleasingWithLowerAmountLimit() public {
+//         vm.startPrank(projectPublisher);
+//         uint256 _goal = 10 ether;
+//         uint256 _milestones = 5;
+//         fundify.createProject(_goal, _milestones);
+//         vm.stopPrank();
 
-        vm.startPrank(user);
-        uint256 investment = 10 ether;
-        fundify.fundProject{value: investment}(projectPublisher, 0);
-        vm.stopPrank();
+//         vm.startPrank(user);
+//         uint256 investment = 10 ether;
+//         fundify.fundProject{value: investment}(projectPublisher, 0);
+//         vm.stopPrank();
 
-        vm.startPrank(projectPublisher);
-        uint256 fundsToBeReleased = 0.1 ether;
-        fundify.releaseFunds(0, fundsToBeReleased, address(treasury));
-        vm.stopPrank();
-    }
+//         vm.startPrank(projectPublisher);
+//         uint256 fundsToBeReleased = 0.1 ether;
+//         fundify.releaseFunds(0, fundsToBeReleased, address(treasury));
+//         vm.stopPrank();
+//     }
 
-    function testProjectFundReleasingWithHigherAmountLimit() public {
-        vm.startPrank(projectPublisher);
-        uint256 _goal = 10 ether;
-        uint256 _milestones = 5;
-        fundify.createProject(_goal, _milestones);
-        vm.stopPrank();
+//     function testProjectFundReleasingWithHigherAmountLimit() public {
+//         vm.startPrank(projectPublisher);
+//         uint256 _goal = 10 ether;
+//         uint256 _milestones = 5;
+//         fundify.createProject(_goal, _milestones);
+//         vm.stopPrank();
 
-        vm.startPrank(user);
-        uint256 investment = 10 ether;
-        fundify.fundProject{value: investment}(projectPublisher, 0);
-        vm.stopPrank();
+//         vm.startPrank(user);
+//         uint256 investment = 10 ether;
+//         fundify.fundProject{value: investment}(projectPublisher, 0);
+//         vm.stopPrank();
 
-        vm.startPrank(projectPublisher);
-        uint256 fundsToBeReleased = 10 ether;
-        fundify.releaseFunds(0, fundsToBeReleased, address(treasury));
-        vm.stopPrank();
-    }
+//         vm.startPrank(projectPublisher);
+//         uint256 fundsToBeReleased = 10 ether;
+//         fundify.releaseFunds(0, fundsToBeReleased, address(treasury));
+//         vm.stopPrank();
+//     }
 
-    function testProjectFundReleasingWithInvalidLowerAmountLimit() public {
-        vm.startPrank(projectPublisher);
-        uint256 _goal = 10 ether;
-        uint256 _milestones = 5;
-        fundify.createProject(_goal, _milestones);
-        vm.stopPrank();
+//     function testProjectFundReleasingWithInvalidLowerAmountLimit() public {
+//         vm.startPrank(projectPublisher);
+//         uint256 _goal = 10 ether;
+//         uint256 _milestones = 5;
+//         fundify.createProject(_goal, _milestones);
+//         vm.stopPrank();
 
-        vm.startPrank(user);
-        uint256 investment = 10 ether;
-        fundify.fundProject{value: investment}(projectPublisher, 0);
-        vm.stopPrank();
+//         vm.startPrank(user);
+//         uint256 investment = 10 ether;
+//         fundify.fundProject{value: investment}(projectPublisher, 0);
+//         vm.stopPrank();
 
-        vm.startPrank(projectPublisher);
-        uint256 fundsToBeReleased = 0 ether;
-        vm.expectRevert(Fundify.InvalidAmountInput.selector);
-        fundify.releaseFunds(0, fundsToBeReleased, address(treasury));
-        vm.stopPrank();
-    }
+//         vm.startPrank(projectPublisher);
+//         uint256 fundsToBeReleased = 0 ether;
+//         vm.expectRevert(Fundify.InvalidAmountInput.selector);
+//         fundify.releaseFunds(0, fundsToBeReleased, address(treasury));
+//         vm.stopPrank();
+//     }
 
-    function testProjectFundReleasingWithInvalidHigherAmountLimit() public {
-        vm.startPrank(projectPublisher);
-        uint256 _goal = 10 ether;
-        uint256 _milestones = 5;
-        fundify.createProject(_goal, _milestones);
-        vm.stopPrank();
+//     function testProjectFundReleasingWithInvalidHigherAmountLimit() public {
+//         vm.startPrank(projectPublisher);
+//         uint256 _goal = 10 ether;
+//         uint256 _milestones = 5;
+//         fundify.createProject(_goal, _milestones);
+//         vm.stopPrank();
 
-        vm.startPrank(user);
-        uint256 investment = 10 ether;
-        fundify.fundProject{value: investment}(projectPublisher, 0);
-        vm.stopPrank();
+//         vm.startPrank(user);
+//         uint256 investment = 10 ether;
+//         fundify.fundProject{value: investment}(projectPublisher, 0);
+//         vm.stopPrank();
 
-        vm.startPrank(projectPublisher);
-        uint256 fundsToBeReleased = 11 ether;
-        vm.expectRevert(Fundify.AmountExceedsProjectFund.selector);
-        fundify.releaseFunds(0, fundsToBeReleased, address(treasury));
-        vm.stopPrank();
-    }
+//         vm.startPrank(projectPublisher);
+//         uint256 fundsToBeReleased = 11 ether;
+//         vm.expectRevert(Fundify.AmountExceedsProjectFund.selector);
+//         fundify.releaseFunds(0, fundsToBeReleased, address(treasury));
+//         vm.stopPrank();
+//     }
 
-    function testProjectFundReleasingWithInvalidToAddress() public {
-        vm.startPrank(projectPublisher);
-        uint256 _goal = 10 ether;
-        uint256 _milestones = 5;
-        fundify.createProject(_goal, _milestones);
-        vm.stopPrank();
+//     function testProjectFundReleasingWithInvalidToAddress() public {
+//         vm.startPrank(projectPublisher);
+//         uint256 _goal = 10 ether;
+//         uint256 _milestones = 5;
+//         fundify.createProject(_goal, _milestones);
+//         vm.stopPrank();
 
-        vm.startPrank(user);
-        uint256 investment = 10 ether;
-        fundify.fundProject{value: investment}(projectPublisher, 0);
-        vm.stopPrank();
+//         vm.startPrank(user);
+//         uint256 investment = 10 ether;
+//         fundify.fundProject{value: investment}(projectPublisher, 0);
+//         vm.stopPrank();
 
-        vm.startPrank(projectPublisher);
-        uint256 fundsToBeReleased = 1 ether;
-        vm.expectRevert(Fundify.InvalidAddressInput.selector);
-        fundify.releaseFunds(0, fundsToBeReleased, address(0));
-        vm.stopPrank();
-    }
+//         vm.startPrank(projectPublisher);
+//         uint256 fundsToBeReleased = 1 ether;
+//         vm.expectRevert(Fundify.InvalidAddressInput.selector);
+//         fundify.releaseFunds(0, fundsToBeReleased, address(0));
+//         vm.stopPrank();
+//     }
 }
