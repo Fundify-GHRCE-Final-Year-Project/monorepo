@@ -177,10 +177,13 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         bool initiate
     ) external payable {
         if (projectAbandoned[msg.sender][_projectIndex]) revert ProjectAbandoned();
+        if (projectCount[msg.sender] < _projectIndex + 1) revert InvalidIndexInput();
+        if (_amount == 0) revert InvalidAmountInput();
+        if (_to == address(0)) revert InvalidAddressInput();
         Project storage project = projects[msg.sender][_projectIndex];
         uint256 remainingAmount = project.funded - project.released;
         if (remainingAmount == 0) revert NoFunds();
-        if (projectCount[msg.sender] < _projectIndex + 1) revert InvalidIndexInput();
+        if (remainingAmount < _amount) revert AmountExceedsProjectFund();
 
         if (initiate) {
             uint256 milestoneAmount = project.goal / project.milestones;
@@ -189,10 +192,11 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
             uint256 cycle = votingCycle[msg.sender][_projectIndex];
             uint256 deadline = votingDeadline[msg.sender][_projectIndex][cycle];
             if (block.timestamp <= deadline) revert VotingCycleGoingOn();
+            if (block.timestamp <= deadline + VOTING_COOLDOWN) revert OnCooldown();
 
             votingCycle[msg.sender][_projectIndex] += 1;
             cycle = votingCycle[msg.sender][_projectIndex];
-            votingDeadline[msg.sender][_projectIndex][cycle] = block.timestamp + VOTING_COOLDOWN;
+            votingDeadline[msg.sender][_projectIndex][cycle] = block.timestamp + VOTING_DEADLINE;
         }
         else {
             uint256 cycle = votingCycle[msg.sender][_projectIndex];
@@ -213,12 +217,6 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint256 _amount,
         address _to
     ) internal {
-        if (_amount == 0) revert InvalidAmountInput();
-        if (_to == address(0)) revert InvalidAddressInput();
-
-        uint256 remainingAmount = _project.funded - _project.released;
-        if (remainingAmount < _amount) revert AmountExceedsProjectFund();
-
         _project.released += _amount;
         (bool sent, ) = payable(_to).call{value: _amount}("");
         if (!sent) revert EthereumTransferFailed();

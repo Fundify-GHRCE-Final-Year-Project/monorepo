@@ -2,7 +2,7 @@
 pragma solidity ^0.8.22;
 
 import { console } from '@forge-std/Test.sol';
-import { Project, Investment } from "../src/Fundify.sol";
+import { Fundify, Project, Investment } from "../src/Fundify.sol";
 import { TestSetUp } from "./TestSetUp.sol";
 
 contract UnitTests is TestSetUp {
@@ -83,14 +83,8 @@ contract UnitTests is TestSetUp {
         vm.stopPrank();
     }
 
-    function testProjectFundingInvalidInputs() public {
-        vm.startPrank(user);
-        
-        vm.stopPrank();
-    }
-
     function testProjectFundReleasing() public {
-        // Create a project
+        vm.warp(block.timestamp + 30 days);
         vm.startPrank(projectPublisher);
 
         uint256 _goal = 10 ether;
@@ -99,7 +93,6 @@ contract UnitTests is TestSetUp {
 
         vm.stopPrank();
 
-        // 3 people invest
         address investor1 = address(23821);
         address investor2 = address(23822);
         address investor3 = address(23823);
@@ -119,18 +112,15 @@ contract UnitTests is TestSetUp {
         fundify.fundProject{value: investment}(projectPublisher, 0);
         vm.stopPrank();
 
-        // Check total investors count
         uint256 investorCount = fundify.investorCount(projectPublisher, 0);
         assertEq(investorCount, 3, "Wrong investor count value");
 
-        // Project owner initiates release request
         address personalWallet = address(82739273);
         uint256 releaseAmount = 1 ether;
         vm.startPrank(projectPublisher);
         fundify.releaseFunds(0, releaseAmount, personalWallet, true);
         vm.stopPrank();
 
-        // Investors vote
         vm.startPrank(investor1);
         fundify.voteOnReleaseRequest(projectPublisher, 0);
         vm.stopPrank();
@@ -141,10 +131,8 @@ contract UnitTests is TestSetUp {
         fundify.voteOnReleaseRequest(projectPublisher, 0);
         vm.stopPrank();
 
-        // Forward by 7 days
         vm.warp(block.timestamp + 7.1 days);
 
-        // User claims the release funds
         uint256 balance = personalWallet.balance;
         assertEq(balance, 0, "Wrong initial personalWallet eth balance");
 
@@ -156,9 +144,189 @@ contract UnitTests is TestSetUp {
         assertEq(balance, releaseAmount, "Wrong final personalWallet eth balance");
     }
 
-    function testProjectFundReleasingInvalidInputs() public {
-        vm.startPrank(user);
-        
+    function testFundReleaseInitiationWhenMilestoneNotReached() public {
+        vm.warp(block.timestamp + 30 days);
+        vm.startPrank(projectPublisher);
+
+        uint256 _goal = 10 ether;
+        uint256 _milestones = 4;
+        fundify.createProject(_goal, _milestones);
+
+        vm.stopPrank();
+
+        address investor = address(23821);
+        uint256 investment = 1 ether;
+
+        vm.deal(investor, initialBalance);
+
+        vm.startPrank(investor);
+        fundify.fundProject{value: investment}(projectPublisher, 0);
+        vm.stopPrank();
+
+        address personalWallet = address(82739273);
+        uint256 releaseAmount = 1 ether;
+        vm.startPrank(projectPublisher);
+        vm.expectRevert(Fundify.MilestoneNotReached.selector);
+        fundify.releaseFunds(0, releaseAmount, personalWallet, true);
+        vm.stopPrank();
+    }
+
+    function testFundReleaseInitiationWhileVotingCycle() public {
+        vm.warp(block.timestamp + 30 days);
+        vm.startPrank(projectPublisher);
+
+        uint256 _goal = 10 ether;
+        uint256 _milestones = 4;
+        fundify.createProject(_goal, _milestones);
+
+        vm.stopPrank();
+
+        address investor = address(23821);
+        uint256 investment = 5 ether;
+
+        vm.deal(investor, initialBalance);
+
+        vm.startPrank(investor);
+        fundify.fundProject{value: investment}(projectPublisher, 0);
+        vm.stopPrank();
+
+        address personalWallet = address(82739273);
+        uint256 releaseAmount = 1 ether;
+        vm.startPrank(projectPublisher);
+        fundify.releaseFunds(0, releaseAmount, personalWallet, true);
+        vm.stopPrank();
+
+        vm.startPrank(projectPublisher);
+        vm.expectRevert(Fundify.VotingCycleGoingOn.selector);
+        fundify.releaseFunds(0, releaseAmount, personalWallet, true);
+        vm.stopPrank();
+    }
+
+    function testFundReleaseInitiationOnCooldown() public {
+        vm.warp(block.timestamp + 30 days);
+        vm.startPrank(projectPublisher);
+
+        uint256 _goal = 10 ether;
+        uint256 _milestones = 4;
+        fundify.createProject(_goal, _milestones);
+
+        vm.stopPrank();
+
+        address investor = address(23821);
+        uint256 investment = 5 ether;
+
+        vm.deal(investor, initialBalance);
+
+        vm.startPrank(investor);
+        fundify.fundProject{value: investment}(projectPublisher, 0);
+        vm.stopPrank();
+
+        address personalWallet = address(82739273);
+        uint256 releaseAmount = 1 ether;
+        vm.startPrank(projectPublisher);
+        fundify.releaseFunds(0, releaseAmount, personalWallet, true);
+        vm.stopPrank();
+
+        vm.startPrank(investor);
+        fundify.voteOnReleaseRequest(projectPublisher, 0);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 7.1 days);
+
+        vm.startPrank(projectPublisher);
+        fundify.releaseFunds(0, releaseAmount, personalWallet, false);
+        vm.stopPrank();
+
+        vm.startPrank(projectPublisher);
+        vm.expectRevert(Fundify.OnCooldown.selector);
+        fundify.releaseFunds(0, releaseAmount, personalWallet, true);
+        vm.stopPrank();
+    }
+
+    function testProjectFundReleasingWhileVotingCycle() public {
+        vm.warp(block.timestamp + 30 days);
+        vm.startPrank(projectPublisher);
+
+        uint256 _goal = 10 ether;
+        uint256 _milestones = 4;
+        fundify.createProject(_goal, _milestones);
+
+        vm.stopPrank();
+
+        address investor = address(23821);
+        uint256 investment = 5 ether;
+
+        vm.deal(investor, initialBalance);
+
+        vm.startPrank(investor);
+        fundify.fundProject{value: investment}(projectPublisher, 0);
+        vm.stopPrank();
+
+        address personalWallet = address(82739273);
+        uint256 releaseAmount = 1 ether;
+        vm.startPrank(projectPublisher);
+        fundify.releaseFunds(0, releaseAmount, personalWallet, true);
+        vm.stopPrank();
+
+        vm.startPrank(investor);
+        fundify.voteOnReleaseRequest(projectPublisher, 0);
+        vm.stopPrank();
+
+        vm.startPrank(projectPublisher);
+        vm.expectRevert(Fundify.VotingCycleNotEnded.selector);
+        fundify.releaseFunds(0, releaseAmount, personalWallet, false);
+        vm.stopPrank();
+    }
+
+    function testProjectFundReleasingWithoutEnoughVotes() public {
+        vm.warp(block.timestamp + 30 days);
+        vm.startPrank(projectPublisher);
+
+        uint256 _goal = 10 ether;
+        uint256 _milestones = 4;
+        fundify.createProject(_goal, _milestones);
+
+        vm.stopPrank();
+
+        address investor1 = address(23821);
+        address investor2 = address(23822);
+        address investor3 = address(23823);
+        address investor4 = address(23824);
+        uint256 investment = 1 ether;
+
+        vm.deal(investor1, initialBalance);
+        vm.deal(investor2, initialBalance);
+        vm.deal(investor3, initialBalance);
+        vm.deal(investor4, initialBalance);
+
+        vm.startPrank(investor1);
+        fundify.fundProject{value: investment}(projectPublisher, 0);
+        vm.stopPrank();
+        vm.startPrank(investor2);
+        fundify.fundProject{value: investment}(projectPublisher, 0);
+        vm.stopPrank();
+        vm.startPrank(investor3);
+        fundify.fundProject{value: investment}(projectPublisher, 0);
+        vm.stopPrank();
+        vm.startPrank(investor4);
+        fundify.fundProject{value: investment}(projectPublisher, 0);
+        vm.stopPrank();
+
+        address personalWallet = address(82739273);
+        uint256 releaseAmount = 1 ether;
+        vm.startPrank(projectPublisher);
+        fundify.releaseFunds(0, releaseAmount, personalWallet, true);
+        vm.stopPrank();
+
+        vm.startPrank(investor1);
+        fundify.voteOnReleaseRequest(projectPublisher, 0);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 7.1 days);
+
+        vm.startPrank(projectPublisher);
+        vm.expectRevert(Fundify.NotEnoughVotes.selector);
+        fundify.releaseFunds(0, releaseAmount, personalWallet, false);
         vm.stopPrank();
     }
 }
