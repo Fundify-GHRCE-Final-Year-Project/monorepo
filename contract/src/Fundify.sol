@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-MIT-NC
 pragma solidity ^0.8.22;
 
 import "@openzeppelin-upgradeable/contracts/proxy/utils/Initializable.sol";

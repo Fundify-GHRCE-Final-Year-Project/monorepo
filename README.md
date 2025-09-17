@@ -91,7 +91,7 @@ We welcome contributions! Please feel free to submit issues and pull requests.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE.txt) file for details.
+Licensed under MIT Non-Commercial License. Contact bhivgadearav0@gmail.com for commercial use. See the [LICENSE](./LICENSE.txt) file for details.
 
 ---
 
