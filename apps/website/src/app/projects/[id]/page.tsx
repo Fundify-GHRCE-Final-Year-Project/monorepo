@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-
+import { Separator } from "@/components/ui/separator";
 import { 
   Loader2, 
   AlertCircle, 
@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { useAccount } from "wagmi";
-import { Separator } from "@/components/ui/seprarator";
 
 interface User {
   _id: string;
@@ -45,6 +44,10 @@ export default function ViewProject() {
   const params = useParams();
   const { address: walletAddress } = useAccount();
   const projectId = typeof params?.id === "string" ? params.id : null;
+
+  const [releaseAddress, setReleaseAddress] = useState("");
+const [releaseAmount, setReleaseAmount] = useState("");
+const [isReleasing, setIsReleasing] = useState(false);
 
   const { project, isLoading: projectLoading, error: projectError } =
     useGetProject(projectId);
@@ -130,6 +133,12 @@ export default function ViewProject() {
 
     fetchMembers();
   }, [project?.members]);
+
+
+  // Handle Release
+  const handleRelease = async () => {
+  // Release funds logic
+};
 
   // Handle investment
   const handleInvest = async () => {
@@ -400,6 +409,81 @@ export default function ViewProject() {
               )}
             </CardContent>
           </Card>
+
+          {walletAddress ? (
+  // Check if current user is the project owner
+  walletAddress.toLowerCase() === project.owner.toLowerCase() ? (
+    // OWNER VIEW - Release Funds Section
+    <div className="space-y-4">
+      <div className="text-center p-3 bg-orange-50 rounded-lg">
+        <h3 className="font-semibold text-orange-800">Project Owner Panel</h3>
+        <p className="text-sm text-orange-600">Release funds to project members</p>
+      </div>
+      
+      {/* Release Address Input */}
+      <div>
+        <label className="text-sm font-medium block mb-2">
+          Release to Address
+        </label>
+        <input
+          type="text"
+          placeholder="0x..."
+          value={releaseAddress}
+          onChange={(e) => setReleaseAddress(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
+      </div>
+      
+      {/* Release Amount Input */}
+      <div>
+        <label className="text-sm font-medium block mb-2">
+          Release Amount (ETH)
+        </label>
+        <input
+          type="number"
+          step="0.001"
+          min="0"
+          placeholder="0.1"
+          value={releaseAmount}
+          onChange={(e) => setReleaseAmount(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
+      </div>
+      
+      {/* Release Button */}
+      <Button
+        onClick={handleRelease}
+        className="w-full bg-orange-600 hover:bg-orange-700"
+        disabled={!releaseAddress || !releaseAmount || isReleasing}
+      >
+        {isReleasing ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Releasing...
+          </>
+        ) : (
+          <>Release {releaseAmount || "0"} ETH</>
+        )}
+      </Button>
+    </div>
+  ) : (
+    // INVESTOR VIEW - Original Investment Section
+    <div className="space-y-4">
+      {/* Your existing investment form code here */}
+    </div>
+  )
+) : (
+  // NOT CONNECTED VIEW
+  <div className="text-center space-y-3">
+    <p className="text-sm text-muted-foreground">
+      Connect your wallet to invest in this project
+    </p>
+    <Button className="w-full" variant="outline" size="lg">
+      <Wallet className="h-4 w-4 mr-2" />
+      Connect Wallet
+    </Button>
+  </div>
+)}
 
           {/* Members Info */}
           {project.members && project.members.length > 0 && (
