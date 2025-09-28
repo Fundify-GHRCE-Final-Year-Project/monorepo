@@ -88,8 +88,9 @@ export function useGetInvestedProjects() {
 
 // ---- Fetch user's own projects ----
 export function useGetUserProjects() {
-  const [currentUser] = useAtom(currentUserAtom);
-  const address = currentUser?.wallet;
+  // const [currentUser] = useAtom(currentUserAtom);
+  const { address: walletAddress } = useAccount();
+  const address = walletAddress;
 
   console.log("Fetching projects for:", address);
 
@@ -113,7 +114,7 @@ export function useGetUserProjects() {
       setError(null);
 
       try {
-        const apiUrl = `/api/users/${address}/projects`;
+        const apiUrl = `/api/users/${walletAddress}/projects`;
         console.log("useGetUserProjects: API URL:", apiUrl);
 
         const res = await fetch(apiUrl, {

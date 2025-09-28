@@ -19,14 +19,18 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
+import { useAccount } from "wagmi";
 
 export default function ProjectsPage() {
+  const { address: walletAddress } = useAccount();
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "funded" | "ended"
   >("all");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  
 
   // Debounce search term to avoid too many API calls
   useEffect(() => {
@@ -100,6 +104,7 @@ export default function ProjectsPage() {
 
   if (error) {
     return (
+
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <AlertCircle className="h-12 w-12 text-red-500" />

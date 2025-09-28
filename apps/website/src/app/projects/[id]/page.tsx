@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useGetProject, fetchUserByWallet } from "@/lib/hooks";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { useAccount } from "wagmi";
+import { useRouter } from "next/navigation";
 
 interface User {
   _id: string;
@@ -44,6 +45,7 @@ export default function ViewProject() {
   const params = useParams();
   const { address: walletAddress } = useAccount();
   const projectId = typeof params?.id === "string" ? params.id : null;
+  const router = useRouter();
 
   const [releaseAddress, setReleaseAddress] = useState("");
   const [releaseAmount, setReleaseAmount] = useState("");
@@ -86,6 +88,31 @@ export default function ViewProject() {
       daysAgo,
     };
   }, [project]);
+
+    if (!walletAddress) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 h-16 w-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                <AlertCircle className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              </div>
+              <CardTitle className="text-2xl">
+                Wallet Connection Required
+              </CardTitle>
+              <CardDescription>
+                Please connect your wallet.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <Button onClick={() => router.push("/")}>Connect Wallet</Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   // Fetch owner info when project is loaded
   useEffect(() => {
@@ -210,6 +237,31 @@ export default function ViewProject() {
         <p className="text-muted-foreground">
           The project with ID {projectId} could not be found.
         </p>
+      </div>
+    );
+  }
+
+  if (!walletAddress) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 h-16 w-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                <AlertCircle className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              </div>
+              <CardTitle className="text-2xl">
+                Wallet Connection Required
+              </CardTitle>
+              <CardDescription>
+                Please connect your wallet to publish a project.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <Button onClick={() => router.push("/")}>Connect Wallet</Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

@@ -24,7 +24,7 @@ import {
   AlertCircle,
   ChevronDown,
 } from "lucide-react";
-import { useWriteContract } from "wagmi";
+import { useAccount, useWriteContract } from "wagmi";
 import { useDialog } from "@/components/ui/TransactionDialog";
 import { toast } from "sonner";
 import { abi } from "@fundify/contract";
@@ -40,6 +40,7 @@ import {
 import { CATEGORY } from "@fundify/types";
 
 export default function PublishProjectPage() {
+    const { address: walletAddress } = useAccount();
   const router = useRouter();
   const [currentUser] = useAtom(currentUserAtom);
   const { showLoadingDialog, hideLoadingDialog } = useDialog();
@@ -182,7 +183,7 @@ export default function PublishProjectPage() {
     }
   };
 
-  if (!currentUser) {
+  if (!walletAddress) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
