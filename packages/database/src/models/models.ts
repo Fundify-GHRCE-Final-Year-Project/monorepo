@@ -70,6 +70,12 @@ const UserSchema = new Schema<User>(
   { timestamps: true }
 );
 
-export const UserModel = mongoose.model("User", UserSchema);
-export const ProjectModel = mongoose.model("Project", ProjectSchema);
-export const InvestmentModel = mongoose.model("Investment", InvestmentSchema);
+export const UserModel =
+  mongoose.models["User"] || mongoose.model("User", UserSchema);
+
+export const ProjectModel =
+  mongoose.models["Project"] || mongoose.model("Project", ProjectSchema);
+
+export const InvestmentModel =
+  mongoose.models["Investment"] ||
+  mongoose.model("Investment", InvestmentSchema);
