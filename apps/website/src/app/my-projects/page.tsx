@@ -155,6 +155,8 @@ export default function MyProjectsPage() {
 
       {/* Projects Grid/List */}
       {!isLoading && filteredProjects.length > 0 && (
+         <>
+       {console.log(filteredProjects)}
         <div className={
           viewMode === 'grid' 
             ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
@@ -163,12 +165,14 @@ export default function MyProjectsPage() {
           {filteredProjects.map((project) => (
             <ProjectCard 
               key={`${project.owner}-${project.index}`}
+              id={project._id}
               project={project}
               viewMode={viewMode}
               // isOwner={true} // Show owner-specific actions
             />
           ))}
         </div>
+        </>
       )}
 
       {/* Empty State */}

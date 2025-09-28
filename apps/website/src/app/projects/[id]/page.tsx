@@ -7,18 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Loader2, 
-  AlertCircle, 
-  Calendar, 
-  Target, 
-  User, 
-  Users, 
+import {
+  Loader2,
+  AlertCircle,
+  Calendar,
+  Target,
+  User,
+  Users,
   Wallet,
   TrendingUp,
   DollarSign,
   CheckCircle,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { useAccount } from "wagmi";
@@ -46,11 +46,14 @@ export default function ViewProject() {
   const projectId = typeof params?.id === "string" ? params.id : null;
 
   const [releaseAddress, setReleaseAddress] = useState("");
-const [releaseAmount, setReleaseAmount] = useState("");
-const [isReleasing, setIsReleasing] = useState(false);
+  const [releaseAmount, setReleaseAmount] = useState("");
+  const [isReleasing, setIsReleasing] = useState(false);
 
-  const { project, isLoading: projectLoading, error: projectError } =
-    useGetProject(projectId);
+  const {
+    project,
+    isLoading: projectLoading,
+    error: projectError,
+  } = useGetProject(projectId);
 
   const [owner, setOwner] = useState<User | null>(null);
   const [members, setMembers] = useState<User[]>([]);
@@ -134,11 +137,10 @@ const [isReleasing, setIsReleasing] = useState(false);
     fetchMembers();
   }, [project?.members]);
 
-
   // Handle Release
   const handleRelease = async () => {
-  // Release funds logic
-};
+    // Release funds logic
+  };
 
   // Handle investment
   const handleInvest = async () => {
@@ -167,7 +169,9 @@ const [isReleasing, setIsReleasing] = useState(false);
       <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <AlertCircle className="h-12 w-12 text-red-500" />
         <h2 className="text-2xl font-semibold">Invalid Project ID</h2>
-        <p className="text-muted-foreground">The project ID provided is not valid.</p>
+        <p className="text-muted-foreground">
+          The project ID provided is not valid.
+        </p>
       </div>
     );
   }
@@ -268,25 +272,33 @@ const [isReleasing, setIsReleasing] = useState(false);
                   <div className="text-2xl font-bold text-blue-600">
                     {projectStats?.goalETH.toFixed(2)}
                   </div>
-                  <div className="text-sm text-muted-foreground">Goal (ETH)</div>
+                  <div className="text-sm text-muted-foreground">
+                    Goal (ETH)
+                  </div>
                 </div>
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <div className="text-2xl font-bold text-green-600">
                     {projectStats?.fundedETH.toFixed(2)}
                   </div>
-                  <div className="text-sm text-muted-foreground">Funded (ETH)</div>
+                  <div className="text-sm text-muted-foreground">
+                    Funded (ETH)
+                  </div>
                 </div>
                 <div className="text-center p-3 bg-purple-50 rounded-lg">
                   <div className="text-2xl font-bold text-purple-600">
                     {projectStats?.releasedETH.toFixed(2)}
                   </div>
-                  <div className="text-sm text-muted-foreground">Released (ETH)</div>
+                  <div className="text-sm text-muted-foreground">
+                    Released (ETH)
+                  </div>
                 </div>
                 <div className="text-center p-3 bg-orange-50 rounded-lg">
                   <div className="text-2xl font-bold text-orange-600">
                     {project.milestones}
                   </div>
-                  <div className="text-sm text-muted-foreground">Milestones</div>
+                  <div className="text-sm text-muted-foreground">
+                    Milestones
+                  </div>
                 </div>
               </div>
 
@@ -298,10 +310,15 @@ const [isReleasing, setIsReleasing] = useState(false);
                     {projectStats?.fundingPercentage.toFixed(1)}%
                   </span>
                 </div>
-                <Progress value={projectStats?.fundingPercentage} className="h-3" />
+                <Progress
+                  value={projectStats?.fundingPercentage}
+                  className="h-3"
+                />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>{projectStats?.fundedETH.toFixed(2)} ETH raised</span>
-                  <span>{projectStats?.remainingETH.toFixed(2)} ETH remaining</span>
+                  <span>
+                    {projectStats?.remainingETH.toFixed(2)} ETH remaining
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -313,7 +330,9 @@ const [isReleasing, setIsReleasing] = useState(false);
               <CardTitle className="flex items-center">
                 <User className="h-5 w-5 mr-2" />
                 Project Owner
-                {ownerLoading && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
+                {ownerLoading && (
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -321,7 +340,7 @@ const [isReleasing, setIsReleasing] = useState(false);
                 <div className="space-y-4">
                   <div className="flex items-start space-x-4">
                     <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {owner.name ? owner.name.charAt(0).toUpperCase() : 'U'}
+                      {owner.name ? owner.name.charAt(0).toUpperCase() : "U"}
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-lg">
@@ -335,24 +354,34 @@ const [isReleasing, setIsReleasing] = useState(false);
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-muted-foreground">Country:</span>
-                      <p className="font-medium">{owner.country || "Not provided"}</p>
+                      <p className="font-medium">
+                        {owner.country || "Not provided"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Phone:</span>
-                      <p className="font-medium">{owner.phone || "Not provided"}</p>
+                      <p className="font-medium">
+                        {owner.phone || "Not provided"}
+                      </p>
                     </div>
                   </div>
 
                   {owner.skills && owner.skills.length > 0 && (
                     <div>
-                      <span className="text-sm text-muted-foreground">Skills:</span>
+                      <span className="text-sm text-muted-foreground">
+                        Skills:
+                      </span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {owner.skills.map((skill, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {skill}
                           </Badge>
                         ))}
@@ -362,10 +391,16 @@ const [isReleasing, setIsReleasing] = useState(false);
 
                   {owner.interests && owner.interests.length > 0 && (
                     <div>
-                      <span className="text-sm text-muted-foreground">Interests:</span>
+                      <span className="text-sm text-muted-foreground">
+                        Interests:
+                      </span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {owner.interests.map((interest, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs"
+                          >
                             {interest}
                           </Badge>
                         ))}
@@ -377,7 +412,11 @@ const [isReleasing, setIsReleasing] = useState(false);
                   <div className="flex space-x-2">
                     {owner.linkedin && (
                       <Button variant="outline" size="sm" asChild>
-                        <a href={owner.linkedin} target="_blank" rel="noopener noreferrer">
+                        <a
+                          href={owner.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           <ExternalLink className="h-4 w-4 mr-1" />
                           LinkedIn
                         </a>
@@ -385,7 +424,11 @@ const [isReleasing, setIsReleasing] = useState(false);
                     )}
                     {owner.github && (
                       <Button variant="outline" size="sm" asChild>
-                        <a href={owner.github} target="_blank" rel="noopener noreferrer">
+                        <a
+                          href={owner.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           <ExternalLink className="h-4 w-4 mr-1" />
                           GitHub
                         </a>
@@ -393,9 +436,12 @@ const [isReleasing, setIsReleasing] = useState(false);
                     )}
                     {owner.x && (
                       <Button variant="outline" size="sm" asChild>
-                        <a href={owner.x} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          X
+                        <a
+                          href={owner.x}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />X
                         </a>
                       </Button>
                     )}
@@ -410,80 +456,7 @@ const [isReleasing, setIsReleasing] = useState(false);
             </CardContent>
           </Card>
 
-          {walletAddress ? (
-  // Check if current user is the project owner
-  walletAddress.toLowerCase() === project.owner.toLowerCase() ? (
-    // OWNER VIEW - Release Funds Section
-    <div className="space-y-4">
-      <div className="text-center p-3 bg-orange-50 rounded-lg">
-        <h3 className="font-semibold text-orange-800">Project Owner Panel</h3>
-        <p className="text-sm text-orange-600">Release funds to project members</p>
-      </div>
-      
-      {/* Release Address Input */}
-      <div>
-        <label className="text-sm font-medium block mb-2">
-          Release to Address
-        </label>
-        <input
-          type="text"
-          placeholder="0x..."
-          value={releaseAddress}
-          onChange={(e) => setReleaseAddress(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-        />
-      </div>
-      
-      {/* Release Amount Input */}
-      <div>
-        <label className="text-sm font-medium block mb-2">
-          Release Amount (ETH)
-        </label>
-        <input
-          type="number"
-          step="0.001"
-          min="0"
-          placeholder="0.1"
-          value={releaseAmount}
-          onChange={(e) => setReleaseAmount(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-        />
-      </div>
-      
-      {/* Release Button */}
-      <Button
-        onClick={handleRelease}
-        className="w-full bg-orange-600 hover:bg-orange-700"
-        disabled={!releaseAddress || !releaseAmount || isReleasing}
-      >
-        {isReleasing ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Releasing...
-          </>
-        ) : (
-          <>Release {releaseAmount || "0"} ETH</>
-        )}
-      </Button>
-    </div>
-  ) : (
-    // INVESTOR VIEW - Original Investment Section
-    <div className="space-y-4">
-      {/* Your existing investment form code here */}
-    </div>
-  )
-) : (
-  // NOT CONNECTED VIEW
-  <div className="text-center space-y-3">
-    <p className="text-sm text-muted-foreground">
-      Connect your wallet to invest in this project
-    </p>
-    <Button className="w-full" variant="outline" size="lg">
-      <Wallet className="h-4 w-4 mr-2" />
-      Connect Wallet
-    </Button>
-  </div>
-)}
+         
 
           {/* Members Info */}
           {project.members && project.members.length > 0 && (
@@ -492,16 +465,23 @@ const [isReleasing, setIsReleasing] = useState(false);
                 <CardTitle className="flex items-center">
                   <Users className="h-5 w-5 mr-2" />
                   Project Members ({project.members.length})
-                  {membersLoading && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
+                  {membersLoading && (
+                    <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {members.length > 0 ? (
                   <div className="space-y-4">
                     {members.map((member) => (
-                      <div key={member.wallet} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <div
+                        key={member.wallet}
+                        className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
+                      >
                         <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                          {member.name ? member.name.charAt(0).toUpperCase() : 'M'}
+                          {member.name
+                            ? member.name.charAt(0).toUpperCase()
+                            : "M"}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h5 className="font-medium truncate">
@@ -517,7 +497,11 @@ const [isReleasing, setIsReleasing] = useState(false);
                         {member.skills && member.skills.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {member.skills.slice(0, 3).map((skill, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
+                              <Badge
+                                key={index}
+                                variant="outline"
+                                className="text-xs"
+                              >
                                 {skill}
                               </Badge>
                             ))}
@@ -537,11 +521,16 @@ const [isReleasing, setIsReleasing] = useState(false);
                       Member information not available in database.
                     </p>
                     <div className="space-y-1">
-                      {project.members.map((memberWallet: string, index: number) => (
-                        <div key={index} className="text-xs font-mono text-muted-foreground p-2 bg-gray-100 rounded">
-                          {memberWallet}
-                        </div>
-                      ))}
+                      {project.members.map(
+                        (memberWallet: string, index: number) => (
+                          <div
+                            key={index}
+                            className="text-xs font-mono text-muted-foreground p-2 bg-gray-100 rounded"
+                          >
+                            {memberWallet}
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 )}
@@ -551,6 +540,88 @@ const [isReleasing, setIsReleasing] = useState(false);
         </div>
 
         {/* Right Column - Investment Panel */}
+        
+         {/* Release Fund Panel  for Owner */}
+          {walletAddress ? (
+            // Check if current user is the project owner
+            walletAddress.toLowerCase() === project.owner.toLowerCase() ? (
+              // OWNER VIEW - Release Funds Section
+              <div className="space-y-4">
+                <div className="text-center p-3 bg-orange-50 rounded-lg">
+                  <h3 className="font-semibold text-orange-800">
+                    Project Owner Panel
+                  </h3>
+                  <p className="text-sm text-orange-600">
+                    Release funds to project members
+                  </p>
+                </div>
+
+                {/* Release Address Input */}
+                <div>
+                  <label className="text-sm font-medium block mb-2">
+                    Release to Address
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="0x..."
+                    value={releaseAddress}
+                    onChange={(e) => setReleaseAddress(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+
+                {/* Release Amount Input */}
+                <div>
+                  <label className="text-sm font-medium block mb-2">
+                    Release Amount (ETH)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    min="0"
+                    placeholder="0.1"
+                    value={releaseAmount}
+                    onChange={(e) => setReleaseAmount(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+
+                {/* Release Button */}
+                <Button
+                  onClick={handleRelease}
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                  disabled={!releaseAddress || !releaseAmount || isReleasing}
+                >
+                  {isReleasing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Releasing...
+                    </>
+                  ) : (
+                    <>Release {releaseAmount || "0"} ETH</>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              // INVESTOR VIEW - Original Investment Section
+              <div className="space-y-4">
+                {/* Your existing investment form code here */}
+              </div>
+            )
+          ) : (
+            // NOT CONNECTED VIEW
+            <div className="text-center space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Connect your wallet to invest in this project
+              </p>
+              <Button className="w-full" variant="outline" size="lg">
+                <Wallet className="h-4 w-4 mr-2" />
+                Connect Wallet
+              </Button>
+            </div>
+          )}
+
+        {walletAddress && walletAddress.toLowerCase() !== project.owner.toLowerCase() && (
         <div className="lg:col-span-1">
           <Card className="sticky top-6">
             <CardHeader>
@@ -566,7 +637,8 @@ const [isReleasing, setIsReleasing] = useState(false);
                 </div>
                 <p className="text-sm text-muted-foreground">funded</p>
                 <div className="text-lg font-semibold text-blue-600 mt-1">
-                  {projectStats?.fundedETH.toFixed(2)} / {projectStats?.goalETH.toFixed(2)} ETH
+                  {projectStats?.fundedETH.toFixed(2)} /{" "}
+                  {projectStats?.goalETH.toFixed(2)} ETH
                 </div>
               </div>
 
@@ -628,9 +700,17 @@ const [isReleasing, setIsReleasing] = useState(false);
                     <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-lg">
                       <p className="font-medium">Investment Summary:</p>
                       <p>Amount: {investAmount} ETH</p>
-                      <p>Your contribution: {projectStats && projectStats.goalETH > 0 
-                        ? ((parseFloat(investAmount) / projectStats.goalETH) * 100).toFixed(2)
-                        : 0}% of goal</p>
+                      <p>
+                        Your contribution:{" "}
+                        {projectStats && projectStats.goalETH > 0
+                          ? (
+                              (parseFloat(investAmount) /
+                                projectStats.goalETH) *
+                              100
+                            ).toFixed(2)
+                          : 0}
+                        % of goal
+                      </p>
                     </div>
                   )}
                 </div>
@@ -657,6 +737,7 @@ const [isReleasing, setIsReleasing] = useState(false);
             </CardContent>
           </Card>
         </div>
+        )}
       </div>
     </div>
   );

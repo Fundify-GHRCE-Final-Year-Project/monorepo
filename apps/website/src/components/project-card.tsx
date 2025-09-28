@@ -9,11 +9,12 @@ import { IProject } from "@fundify/database";
 import Link from "next/link";
 
 interface ProjectCardProps {
+  id: string;
   project: IProject;
   viewMode?: "grid" | "list";
 }
 
-export function ProjectCard({ project, viewMode = "grid" }: ProjectCardProps) {
+export function ProjectCard({ id, project, viewMode = "grid" }: ProjectCardProps) {
   // Safely calculate funding percentage
   const calculateFundingPercentage = () => {
     if (!project.goal || project.goal === 0) return 0;
@@ -162,8 +163,8 @@ export function ProjectCard({ project, viewMode = "grid" }: ProjectCardProps) {
         </div>
 
         <div className="pt-4">
-         <Button className="w-full" onClick={handleViewProject}>
-             <Link href={`/projects/${project.id}`}>
+         <Button className="w-full" onClick={handleViewProject} asChild>
+              <Link href={`/projects/${id}`}>
                 View Project   <span><ExternalLink className="ml-2 h-4 w-4" /></span> 
               </Link>
           </Button>

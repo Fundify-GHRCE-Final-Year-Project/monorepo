@@ -296,6 +296,7 @@ export default function ProjectsPage() {
           {filteredProjects.map((project) => (
             <ProjectCard
               key={`${project.owner}-${project.index}`}
+              id={project.id}
               project={project}
               viewMode={viewMode}
             />

@@ -248,7 +248,7 @@ export default function InvestedProjectsPage() {
                 key={`${project.owner}-${project.index}`}
                 className="relative"
               >
-                <ProjectCard project={project} viewMode={viewMode} />
+                <ProjectCard  id={project._id} project={project} viewMode={viewMode} />
                 {/* Investment Badge */}
                 <div className="absolute top-2 right-2">
                   <Badge
