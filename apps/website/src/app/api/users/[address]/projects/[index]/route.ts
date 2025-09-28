@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@fundify/database";
 import { ProjectModel } from "@fundify/database";
+import { Types } from "mongoose";
 
 export async function GET(
   request: NextRequest,
@@ -14,13 +15,14 @@ export async function GET(
 
     if (!address || !index) {
       return NextResponse.json(
-        { ok: false, error: "Address and project index are required" },
+        { ok: false, error: "Address and project id are required" },
         { status: 400 }
       );
     }
 
     const projectIndex = parseInt(index);
-    if (isNaN(projectIndex)) {
+     // Validate that index is a valid MongoDB ObjectId
+    if (!Types.ObjectId.isValid(index)) {
       return NextResponse.json(
         { ok: false, error: "Invalid project index" },
         { status: 400 }
@@ -29,8 +31,8 @@ export async function GET(
 
     // Find the specific project
     const project = await ProjectModel.findOne({
-      owner: address.toLowerCase(),
-      index: projectIndex,
+      owner: address.toLowerCase(), // normalize to lowercase
+      _id: new Types.ObjectId(index),
     });
 
     if (!project) {

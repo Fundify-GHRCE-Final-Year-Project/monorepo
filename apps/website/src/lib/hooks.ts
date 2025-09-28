@@ -1,4 +1,4 @@
-// lib/hooks.ts - Add these hooks to your existing hooks file
+// lib/hooks.ts - Updated hooks with fixes
 
 import { useAtom } from "jotai";
 import { currentUserAtom } from "@/store/global";
@@ -6,16 +6,23 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Project } from "@fundify/types";
 import { IProject } from "@fundify/database/src/models/models";
+import { useAccount } from "wagmi";
 
 // lib/api.ts
 export async function fetchUserByWallet(wallet: string | undefined | null) {
   if (!wallet) return null;
-  const res = await fetch(`/api/user/${wallet}`, { cache: "no-store" });
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(txt || "Failed to fetch user");
+  try {
+    const res = await fetch(`/api/user/${wallet}`, { cache: "no-store" });
+    if (!res.ok) {
+      console.warn(`Failed to fetch user for wallet ${wallet}:`, res.status);
+      return null; // Return null instead of throwing error
+    }
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching user by wallet:", error);
+    return null;
   }
-  return res.json();
 }
 
 type InvestmentDTO = {
@@ -148,31 +155,26 @@ export function useGetUserProjects() {
 }
 
 // ---- Fetch specific project ----
-export function useGetProject(projectIndex: number) {
-  const [currentUser] = useAtom(currentUserAtom);
-  const address = currentUser?.wallet;
+export function useGetProject(projectId: string | null) {
+  const { address: walletAddress } = useAccount();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [project, setProject] = useState<any>(null);
 
   useEffect(() => {
-    if (!address || projectIndex === undefined) return;
+    if (!walletAddress || !projectId === undefined) return;
 
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
       try {
         const res = await fetch(
-          `/api/users/${address}/projects/${projectIndex}`,
-          {
-            cache: "no-store",
-          }
+         `/api/project/${projectId}`,
+          { cache: "no-store" }
         );
         const json = await res.json();
-        if (!res.ok || !json.ok) {
-          throw new Error(json.error || "Failed to load project");
-        }
+        if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
         setProject(json.data);
       } catch (e: any) {
         setError(e.message || "Failed to load project");
@@ -182,39 +184,48 @@ export function useGetProject(projectIndex: number) {
     };
 
     fetchData();
-  }, [address, projectIndex]);
+  }, [walletAddress, projectId]);
 
   return { project, isLoading, error };
 }
 
 // ---- Fetch project investments ----
-export function useGetProjectInvestments(projectIndex: number) {
-  const [currentUser] = useAtom(currentUserAtom);
-  const address = currentUser?.wallet;
+export function useGetProjectInvestments(projectIndex: string | null) {
+  // const [currentUser] = useAtom(currentUserAtom);
+  // const address = currentUser?.wallet;
+
+  const { address: walletAddress } = useAccount();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    if (!address || projectIndex === undefined) return;
+     if (!walletAddress || projectIndex === null || projectIndex === undefined) {
+      console.log("useGetProjectInvestments: Missing requirements", { walletAddress, projectIndex });
+      return;
+    }
 
     const fetchData = async () => {
+      console.log(`useGetProjectInvestments: Fetching investments for project ${projectIndex}`);
       setIsLoading(true);
       setError(null);
       try {
         const res = await fetch(
-          `/api/users/${address}/projects/${projectIndex}/investments`,
+           `/api/users/${walletAddress}/projects/${projectIndex}/investments`,
           {
             cache: "no-store",
           }
         );
+        console.log("useGetProjectInvestments response:", res.status);
         const json = await res.json();
+         console.log("useGetProjectInvestments data:", json);
         if (!res.ok || !json.ok) {
           throw new Error(json.error || "Failed to load project investments");
         }
         setData(json.data);
       } catch (e: any) {
+         console.error("useGetProjectInvestments error:", e);
         setError(e.message || "Failed to load project investments");
       } finally {
         setIsLoading(false);
@@ -222,7 +233,7 @@ export function useGetProjectInvestments(projectIndex: number) {
     };
 
     fetchData();
-  }, [address, projectIndex]);
+  }, [walletAddress, projectIndex]);
 
   return {
     project: data?.project,
