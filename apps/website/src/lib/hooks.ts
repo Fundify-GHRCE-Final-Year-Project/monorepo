@@ -161,7 +161,7 @@ export function useGetProject(projectId: string | null) {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [project, setProject] = useState<any>(null);
+  const [project, setProject] = useState<IProject | null>(null);
 
   useEffect(() => {
     if (!walletAddress || !projectId === undefined) return;
@@ -170,10 +170,9 @@ export function useGetProject(projectId: string | null) {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(
-         `/api/project/${projectId}`,
-          { cache: "no-store" }
-        );
+        const res = await fetch(`/api/project/${projectId}`, {
+          cache: "no-store",
+        });
         const json = await res.json();
         if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
         setProject(json.data);
@@ -202,31 +201,36 @@ export function useGetProjectInvestments(projectIndex: string | null) {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-     if (!walletAddress || projectIndex === null || projectIndex === undefined) {
-      console.log("useGetProjectInvestments: Missing requirements", { walletAddress, projectIndex });
+    if (!walletAddress || projectIndex === null || projectIndex === undefined) {
+      console.log("useGetProjectInvestments: Missing requirements", {
+        walletAddress,
+        projectIndex,
+      });
       return;
     }
 
     const fetchData = async () => {
-      console.log(`useGetProjectInvestments: Fetching investments for project ${projectIndex}`);
+      console.log(
+        `useGetProjectInvestments: Fetching investments for project ${projectIndex}`
+      );
       setIsLoading(true);
       setError(null);
       try {
         const res = await fetch(
-           `/api/users/${walletAddress}/projects/${projectIndex}/investments`,
+          `/api/users/${walletAddress}/projects/${projectIndex}/investments`,
           {
             cache: "no-store",
           }
         );
         console.log("useGetProjectInvestments response:", res.status);
         const json = await res.json();
-         console.log("useGetProjectInvestments data:", json);
+        console.log("useGetProjectInvestments data:", json);
         if (!res.ok || !json.ok) {
           throw new Error(json.error || "Failed to load project investments");
         }
         setData(json.data);
       } catch (e: any) {
-         console.error("useGetProjectInvestments error:", e);
+        console.error("useGetProjectInvestments error:", e);
         setError(e.message || "Failed to load project investments");
       } finally {
         setIsLoading(false);

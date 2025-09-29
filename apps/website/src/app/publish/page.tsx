@@ -40,7 +40,7 @@ import {
 import { CATEGORY } from "@fundify/types";
 
 export default function PublishProjectPage() {
-    const { address: walletAddress } = useAccount();
+  const { address: walletAddress } = useAccount();
   const router = useRouter();
   const [currentUser] = useAtom(currentUserAtom);
   const { showLoadingDialog, hideLoadingDialog } = useDialog();
@@ -173,7 +173,7 @@ export default function PublishProjectPage() {
       });
     } catch (error) {
       console.log(error);
-      toast.error("Authentication Error", {
+      toast.error("Error", {
         description: `${
           error instanceof Error ? error.message : String(error)
         }`,

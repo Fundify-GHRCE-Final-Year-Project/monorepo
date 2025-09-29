@@ -2,7 +2,13 @@
 
 import { useParams } from "next/navigation";
 import { useGetProject, fetchUserByWallet } from "@/lib/hooks";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -21,8 +27,14 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useWriteContract } from "wagmi";
 import { useRouter } from "next/navigation";
+import { currentUserAtom } from "@/store/global";
+import { useAtom } from "jotai";
+import { useDialog } from "@/components/ui/TransactionDialog";
+import { toast } from "sonner";
+import { abi } from "@fundify/contract";
+import { parseEther } from "viem";
 
 interface User {
   _id: string;
@@ -46,6 +58,10 @@ export default function ViewProject() {
   const { address: walletAddress } = useAccount();
   const projectId = typeof params?.id === "string" ? params.id : null;
   const router = useRouter();
+
+  const [currentUser] = useAtom(currentUserAtom);
+  const { showLoadingDialog, hideLoadingDialog } = useDialog();
+  const { writeContractAsync } = useWriteContract();
 
   const [releaseAddress, setReleaseAddress] = useState("");
   const [releaseAmount, setReleaseAmount] = useState("");
@@ -75,7 +91,9 @@ export default function ViewProject() {
     const isFullyFunded = fundingPercentage >= 100;
 
     const daysAgo = project.timestamp
-      ? Math.floor((Date.now() / 1000 - project.timestamp) / (24 * 60 * 60))
+      ? Math.floor(
+          (Date.now() / 1000 - Number(project.timestamp)) / (24 * 60 * 60)
+        )
       : 0;
 
     return {
@@ -89,7 +107,7 @@ export default function ViewProject() {
     };
   }, [project]);
 
-    if (!walletAddress) {
+  if (!walletAddress) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
@@ -101,9 +119,7 @@ export default function ViewProject() {
               <CardTitle className="text-2xl">
                 Wallet Connection Required
               </CardTitle>
-              <CardDescription>
-                Please connect your wallet.
-              </CardDescription>
+              <CardDescription>Please connect your wallet.</CardDescription>
             </CardHeader>
             <CardContent className="text-center">
               <Button onClick={() => router.push("/")}>Connect Wallet</Button>
@@ -171,22 +187,62 @@ export default function ViewProject() {
 
   // Handle investment
   const handleInvest = async () => {
-    if (!investAmount || !project || !walletAddress) return;
+    if (!currentUser) {
+      toast.error("No Wallet Found", {
+        description: "Please install a wallet extension to use Fundify",
+      });
+      return;
+    }
 
-    setIsInvesting(true);
+    if (!investAmount || !project || !walletAddress) {
+      toast.error("Invalid Inputs", {
+        description: "Please enter valid inputs",
+      });
+      return;
+    }
+
+    // if (!project.owner || !project.index) {
+    //   toast.error("Project Details Not Found", {
+    //     description: "Try reloading the page to fix the issue.",
+    //   });
+    //   return;
+    // }
+
+    showLoadingDialog({
+      isOpen: true,
+      title: "Processing your request",
+      description: "Calling Fundify on Ethereum",
+    });
     try {
-      // Placeholder for blockchain logic
-      console.log(`Investing ${investAmount} ETH in project ${project.index}`);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      alert(`Successfully invested ${investAmount} ETH!`);
-      setInvestAmount("");
+      const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
+      if (!contractAddress) {
+        toast.error("Enviorment Error", {
+          description: "CONTRACT_ADDRESS is not set.",
+        });
+        return;
+      }
+      const sig = await writeContractAsync({
+        address: contractAddress as `0x${string}`,
+        abi: abi,
+        functionName: "fundProject",
+        args: [project.owner, project.index],
+        gas: BigInt(300000),
+        value: parseEther(investAmount),
+      });
+      toast.success("Project Created", {
+        description: `${sig}`,
+      });
       // In real implementation, you would refresh the project data here
       window.location.reload();
     } catch (error) {
-      console.error("Investment failed:", error);
-      alert("Investment failed. Please try again.");
+      console.log(error);
+      toast.error("Error", {
+        description: `${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      });
     } finally {
-      setIsInvesting(false);
+      hideLoadingDialog();
     }
   };
 
@@ -508,8 +564,6 @@ export default function ViewProject() {
             </CardContent>
           </Card>
 
-         
-
           {/* Members Info */}
           {project.members && project.members.length > 0 && (
             <Card>
@@ -592,204 +646,207 @@ export default function ViewProject() {
         </div>
 
         {/* Right Column - Investment Panel */}
-        
-         {/* Release Fund Panel  for Owner */}
-          {walletAddress ? (
-            // Check if current user is the project owner
-            walletAddress.toLowerCase() === project.owner.toLowerCase() ? (
-              // OWNER VIEW - Release Funds Section
-              <div className="space-y-4">
-                <div className="text-center p-3 bg-orange-50 rounded-lg">
-                  <h3 className="font-semibold text-orange-800">
-                    Project Owner Panel
-                  </h3>
-                  <p className="text-sm text-orange-600">
-                    Release funds to project members
-                  </p>
-                </div>
 
-                {/* Release Address Input */}
-                <div>
-                  <label className="text-sm font-medium block mb-2">
-                    Release to Address
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="0x..."
-                    value={releaseAddress}
-                    onChange={(e) => setReleaseAddress(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-
-                {/* Release Amount Input */}
-                <div>
-                  <label className="text-sm font-medium block mb-2">
-                    Release Amount (ETH)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.001"
-                    min="0"
-                    placeholder="0.1"
-                    value={releaseAmount}
-                    onChange={(e) => setReleaseAmount(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-
-                {/* Release Button */}
-                <Button
-                  onClick={handleRelease}
-                  className="w-full bg-orange-600 hover:bg-orange-700"
-                  disabled={!releaseAddress || !releaseAmount || isReleasing}
-                >
-                  {isReleasing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Releasing...
-                    </>
-                  ) : (
-                    <>Release {releaseAmount || "0"} ETH</>
-                  )}
-                </Button>
+        {/* Release Fund Panel  for Owner */}
+        {walletAddress ? (
+          // Check if current user is the project owner
+          walletAddress.toLowerCase() === project.owner.toLowerCase() ? (
+            // OWNER VIEW - Release Funds Section
+            <div className="space-y-4">
+              <div className="text-center p-3 bg-orange-50 rounded-lg">
+                <h3 className="font-semibold text-orange-800">
+                  Project Owner Panel
+                </h3>
+                <p className="text-sm text-orange-600">
+                  Release funds to project members
+                </p>
               </div>
-            ) : (
-              // INVESTOR VIEW - Original Investment Section
-              <div className="space-y-4">
-                {/* Your existing investment form code here */}
+
+              {/* Release Address Input */}
+              <div>
+                <label className="text-sm font-medium block mb-2">
+                  Release to Address
+                </label>
+                <input
+                  type="text"
+                  placeholder="0x..."
+                  value={releaseAddress}
+                  onChange={(e) => setReleaseAddress(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
               </div>
-            )
-          ) : (
-            // NOT CONNECTED VIEW
-            <div className="text-center space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Connect your wallet to invest in this project
-              </p>
-              <Button className="w-full" variant="outline" size="lg">
-                <Wallet className="h-4 w-4 mr-2" />
-                Connect Wallet
+
+              {/* Release Amount Input */}
+              <div>
+                <label className="text-sm font-medium block mb-2">
+                  Release Amount (ETH)
+                </label>
+                <input
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  placeholder="0.1"
+                  value={releaseAmount}
+                  onChange={(e) => setReleaseAmount(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              {/* Release Button */}
+              <Button
+                onClick={handleRelease}
+                className="w-full bg-orange-600 hover:bg-orange-700"
+                disabled={!releaseAddress || !releaseAmount || isReleasing}
+              >
+                {isReleasing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Releasing...
+                  </>
+                ) : (
+                  <>Release {releaseAmount || "0"} ETH</>
+                )}
               </Button>
             </div>
-          )}
+          ) : (
+            // INVESTOR VIEW - Original Investment Section
+            <div className="space-y-4">
+              {/* Your existing investment form code here */}
+            </div>
+          )
+        ) : (
+          // NOT CONNECTED VIEW
+          <div className="text-center space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Connect your wallet to invest in this project
+            </p>
+            <Button className="w-full" variant="outline" size="lg">
+              <Wallet className="h-4 w-4 mr-2" />
+              Connect Wallet
+            </Button>
+          </div>
+        )}
 
-        {walletAddress && walletAddress.toLowerCase() !== project.owner.toLowerCase() && (
-        <div className="lg:col-span-1">
-          <Card className="sticky top-6">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Wallet className="h-5 w-5 mr-2" />
-                Invest in This Project
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
-                <div className="text-3xl font-bold text-green-600">
-                  {projectStats?.fundingPercentage.toFixed(1)}%
-                </div>
-                <p className="text-sm text-muted-foreground">funded</p>
-                <div className="text-lg font-semibold text-blue-600 mt-1">
-                  {projectStats?.fundedETH.toFixed(2)} /{" "}
-                  {projectStats?.goalETH.toFixed(2)} ETH
-                </div>
-              </div>
-
-              <Separator />
-
-              {walletAddress ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium block mb-2">
-                      Investment Amount (ETH)
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        step="0.001"
-                        min="0"
-                        placeholder="0.1"
-                        value={investAmount}
-                        onChange={(e) => setInvestAmount(e.target.value)}
-                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        disabled={projectStats?.isFullyFunded || isInvesting}
-                      />
-                      <div className="absolute right-3 top-3 text-sm text-muted-foreground">
-                        ETH
-                      </div>
+        {walletAddress &&
+          walletAddress.toLowerCase() !== project.owner.toLowerCase() && (
+            <div className="lg:col-span-1">
+              <Card className="sticky top-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Wallet className="h-5 w-5 mr-2" />
+                    Invest in This Project
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
+                    <div className="text-3xl font-bold text-green-600">
+                      {projectStats?.fundingPercentage.toFixed(1)}%
+                    </div>
+                    <p className="text-sm text-muted-foreground">funded</p>
+                    <div className="text-lg font-semibold text-blue-600 mt-1">
+                      {projectStats?.fundedETH.toFixed(2)} /{" "}
+                      {projectStats?.goalETH.toFixed(2)} ETH
                     </div>
                   </div>
 
-                  <Button
-                    onClick={handleInvest}
-                    className="w-full py-3 text-lg font-semibold"
-                    size="lg"
-                    disabled={
-                      !investAmount ||
-                      parseFloat(investAmount) <= 0 ||
-                      projectStats?.isFullyFunded ||
-                      isInvesting
-                    }
-                  >
-                    {isInvesting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Investing...
-                      </>
-                    ) : projectStats?.isFullyFunded ? (
-                      <>
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Project Fully Funded
-                      </>
-                    ) : (
-                      <>
-                        <DollarSign className="h-4 w-4 mr-2" />
-                        Invest {investAmount || "0"} ETH
-                      </>
-                    )}
-                  </Button>
+                  <Separator />
 
-                  {investAmount && parseFloat(investAmount) > 0 && (
-                    <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-lg">
-                      <p className="font-medium">Investment Summary:</p>
-                      <p>Amount: {investAmount} ETH</p>
-                      <p>
-                        Your contribution:{" "}
-                        {projectStats && projectStats.goalETH > 0
-                          ? (
-                              (parseFloat(investAmount) /
-                                projectStats.goalETH) *
-                              100
-                            ).toFixed(2)
-                          : 0}
-                        % of goal
+                  {walletAddress ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium block mb-2">
+                          Investment Amount (ETH)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.001"
+                            min="0"
+                            placeholder="0.1"
+                            value={investAmount}
+                            onChange={(e) => setInvestAmount(e.target.value)}
+                            className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            disabled={
+                              projectStats?.isFullyFunded || isInvesting
+                            }
+                          />
+                          <div className="absolute right-3 top-3 text-sm text-muted-foreground">
+                            ETH
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={handleInvest}
+                        className="w-full py-3 text-lg font-semibold"
+                        size="lg"
+                        disabled={
+                          !investAmount ||
+                          parseFloat(investAmount) <= 0 ||
+                          projectStats?.isFullyFunded ||
+                          isInvesting
+                        }
+                      >
+                        {isInvesting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Investing...
+                          </>
+                        ) : projectStats?.isFullyFunded ? (
+                          <>
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Project Fully Funded
+                          </>
+                        ) : (
+                          <>
+                            <DollarSign className="h-4 w-4 mr-2" />
+                            Invest {investAmount || "0"} ETH
+                          </>
+                        )}
+                      </Button>
+
+                      {investAmount && parseFloat(investAmount) > 0 && (
+                        <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-lg">
+                          <p className="font-medium">Investment Summary:</p>
+                          <p>Amount: {investAmount} ETH</p>
+                          <p>
+                            Your contribution:{" "}
+                            {projectStats && projectStats.goalETH > 0
+                              ? (
+                                  (parseFloat(investAmount) /
+                                    projectStats.goalETH) *
+                                  100
+                                ).toFixed(2)
+                              : 0}
+                            % of goal
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        Connect your wallet to invest in this project
                       </p>
+                      <Button className="w-full" variant="outline" size="lg">
+                        <Wallet className="h-4 w-4 mr-2" />
+                        Connect Wallet
+                      </Button>
                     </div>
                   )}
-                </div>
-              ) : (
-                <div className="text-center space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Connect your wallet to invest in this project
-                  </p>
-                  <Button className="w-full" variant="outline" size="lg">
-                    <Wallet className="h-4 w-4 mr-2" />
-                    Connect Wallet
-                  </Button>
-                </div>
-              )}
 
-              <Separator />
+                  <Separator />
 
-              <div className="text-xs text-muted-foreground space-y-2">
-                <p>• Your investment will be held in a smart contract</p>
-                <p>• Funds are released based on milestone completion</p>
-                <p>• You can track project progress and fund releases</p>
-                <p>• Investment is non-refundable once committed</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        )}
+                  <div className="text-xs text-muted-foreground space-y-2">
+                    <p>• Your investment will be held in a smart contract</p>
+                    <p>• Funds are released based on milestone completion</p>
+                    <p>• You can track project progress and fund releases</p>
+                    <p>• Investment is non-refundable once committed</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
       </div>
     </div>
   );

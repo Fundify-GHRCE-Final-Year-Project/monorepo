@@ -12,12 +12,12 @@ if [ -f ".env.development" ]; then
   set +a
 fi
 
-if [ -z "$RPC_URL" ]; then
-  echo "Sourcing .env for RPC_URL"
-  set -a
-  source .env
-  set +a
-fi
+# if [ -z "$RPC_URL" ]; then
+#   echo "Sourcing .env for RPC_URL"
+#   set -a
+#   source .env
+#   set +a
+# fi
 
 # Deploy and create projects in one go
 forge script testing.s.sol:DeployAndCreateFundify \

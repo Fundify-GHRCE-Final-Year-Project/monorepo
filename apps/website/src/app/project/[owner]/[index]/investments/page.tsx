@@ -42,7 +42,7 @@ export default function ProjectInvestmentsPage({
     totalAmount,
     isLoading,
     error,
-  } = useGetProjectInvestments(projectIndex);
+  } = useGetProjectInvestments(String(projectIndex));
   const [currentUser] = useAtom(currentUserAtom);
   const router = useRouter();
 

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Model } from "mongoose";
 import { Schema, Document } from "mongoose";
 import {
   Project,
@@ -52,7 +52,9 @@ const experienceSchema = new Schema<Experience>({
   duration: { type: String },
 });
 
-const UserSchema = new Schema<User>(
+export interface IUser extends User, Document {}
+
+const UserSchema = new Schema<IUser>(
   {
     wallet: { type: String, required: true, unique: true },
     name: { type: String },
@@ -70,12 +72,12 @@ const UserSchema = new Schema<User>(
   { timestamps: true }
 );
 
-export const UserModel =
+export const UserModel: Model<IUser> =
   mongoose.models["User"] || mongoose.model("User", UserSchema);
 
-export const ProjectModel =
+export const ProjectModel: Model<IProject> =
   mongoose.models["Project"] || mongoose.model("Project", ProjectSchema);
 
-export const InvestmentModel =
+export const InvestmentModel: Model<IInvestment> =
   mongoose.models["Investment"] ||
   mongoose.model("Investment", InvestmentSchema);
