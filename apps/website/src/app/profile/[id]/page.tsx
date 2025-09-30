@@ -2,7 +2,7 @@
 "use client";
 
 import { useAtom } from "jotai";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { currentUserAtom } from "@/store/global";
 import { fetchUserByWallet, useGetUserProjects } from "@/lib/hooks";
@@ -57,12 +57,16 @@ export default function ProfilePage() {
   const [currentUser] = useAtom(currentUserAtom);
   const { projects, isLoading, error } = useGetUserProjects();
 
+  const params = useParams();
+  // const { address: walletAddress } = useAccount();
+  const walletAddress: string = (params as { walletAddress?: string }).walletAddress ?? "";
+
   // State for dynamically fetched user data
   const [fetchedUser, setFetchedUser] = useState<UserData | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(false);
   const [userError, setUserError] = useState<string | null>(null);
 
-  const { address: walletAddress, isConnected } = useAccount();
+  // const { address: walletAddress, isConnected } = useAccount();
 
   // Fetch user data dynamically
   useEffect(() => {
@@ -93,7 +97,6 @@ export default function ProfilePage() {
   // Debug logging
   useEffect(() => {
     console.log("Profile Debug:", {
-      isConnected,
       currentUser,
       fetchedUser,
       displayUser,
@@ -104,7 +107,6 @@ export default function ProfilePage() {
       error,
     });
   }, [
-    isConnected,
     currentUser,
     fetchedUser,
     displayUser,
@@ -114,11 +116,11 @@ export default function ProfilePage() {
     error,
   ]);
 
-  useEffect(() => {
-    if (!isConnected) {
-      router.push("/");
-    }
-  }, [isConnected, router]);
+  // useEffect(() => {
+  //   if (!isConnected) {
+  //     router.push("/");
+  //   }
+  // }, [isConnected, router]);
 
   const formatAddress = (address: string) => {
     if (!address) return "";
