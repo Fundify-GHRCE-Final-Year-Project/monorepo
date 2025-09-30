@@ -48,6 +48,7 @@ export default function ProjectsPage() {
     offset: 0,
   });
 
+
   // Client-side filtering as backup (in case API doesn't handle all filters)
   const filteredProjects = useMemo(() => {
     if (!projects) return [];
