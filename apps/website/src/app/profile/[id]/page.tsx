@@ -54,19 +54,23 @@ interface UserData {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [currentUser] = useAtom(currentUserAtom);
-  const { projects, isLoading, error } = useGetUserProjects();
-
+  // const [currentUser] = useAtom(currentUserAtom);
+  
   const params = useParams();
+  console.log("params",params);
   // const { address: walletAddress } = useAccount();
-  const walletAddress: string = (params as { walletAddress?: string }).walletAddress ?? "";
+  const walletAddress: string = (params as { id?: string }).id ?? "";
+  console.log("profile",walletAddress);
+
+  const { projects, isLoading, error } = useGetUserProjects(walletAddress);
+  console.log("Project info for test", projects.map(p => p));
 
   // State for dynamically fetched user data
   const [fetchedUser, setFetchedUser] = useState<UserData | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(false);
   const [userError, setUserError] = useState<string | null>(null);
 
-  // const { address: walletAddress, isConnected } = useAccount();
+  const { address: currentUserWallet, isConnected } = useAccount();
 
   // Fetch user data dynamically
   useEffect(() => {
@@ -92,24 +96,20 @@ export default function ProfilePage() {
   }, [walletAddress]);
 
   // Use fetched user data, fallback to currentUser from atom
-  const displayUser = fetchedUser || currentUser;
+  // const displayUser = fetchedUser || currentUser;
 
   // Debug logging
   useEffect(() => {
     console.log("Profile Debug:", {
-      currentUser,
       fetchedUser,
-      displayUser,
-      userWallet: displayUser?.wallet,
+      userWallet: fetchedUser?.wallet,
       walletAddress,
       projects,
       isLoading,
       error,
     });
   }, [
-    currentUser,
     fetchedUser,
-    displayUser,
     walletAddress,
     projects,
     isLoading,
@@ -199,7 +199,7 @@ export default function ProfilePage() {
   }
 
   // Show no user state if no user data available
-  if (!displayUser) {
+  if (!walletAddress) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -225,10 +225,12 @@ export default function ProfilePage() {
             Manage your account and view your activity on Fundiy.
           </p>
         </div>
+        {currentUserWallet?.toLowerCase() === walletAddress?.toLowerCase() && (
         <Button onClick={() => router.push("/profile/editProfile")}>
           <Edit className="h-4 w-4 mr-2" />
           Edit Profile
         </Button>
+  )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -240,10 +242,10 @@ export default function ProfilePage() {
                 <User className="h-12 w-12 text-primary" />
               </div>
               <CardTitle className="text-xl">
-                {displayUser.name || "Anonymous User"}
+                {fetchedUser?.name || "Anonymous User"}
               </CardTitle>
               <CardDescription>
-                {formatAddress(displayUser.wallet)}
+                {formatAddress(fetchedUser?.wallet || "0x")}
               </CardDescription>
             </CardHeader>
 
@@ -255,17 +257,17 @@ export default function ProfilePage() {
                 </div>
               )} */}
 
-              {displayUser.country && (
+              {fetchedUser?.country && (
                 <div className="flex items-center space-x-3">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{displayUser.country}</span>
+                  <span className="text-sm">{fetchedUser.country}</span>
                 </div>
               )}
 
-              {displayUser.role && (
+              {fetchedUser?.role && (
                 <div className="flex items-center space-x-3">
                   <Briefcase className="h-4 w-4 text-muted-foreground" />
-                  <Badge variant="secondary">{displayUser.role}</Badge>
+                  <Badge variant="secondary">{fetchedUser.role}</Badge>
                 </div>
               )}
 
@@ -277,11 +279,11 @@ export default function ProfilePage() {
               )} */}
 
               {/* Skills */}
-              {displayUser.skills && displayUser.skills.length > 0 && (
+              {fetchedUser?.skills && fetchedUser.skills.length > 0 && (
                 <div>
                   <p className="text-sm font-medium mb-2">Skills</p>
                   <div className="flex flex-wrap gap-2">
-                    {displayUser.skills.map((skill, index) => (
+                    {fetchedUser.skills.map((skill, index) => (
                       <Badge key={index} variant="outline" className="text-xs">
                         {skill}
                       </Badge>
@@ -292,9 +294,9 @@ export default function ProfilePage() {
 
               {/* Social Links */}
               <div className="space-y-2">
-                {displayUser.github && (
+                {fetchedUser?.github && (
                   <a
-                    href={displayUser.github}
+                    href={fetchedUser.github}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center space-x-3 text-sm hover:text-primary transition-colors"
@@ -305,9 +307,9 @@ export default function ProfilePage() {
                   </a>
                 )}
 
-                {displayUser.linkedin && (
+                {fetchedUser?.linkedin && (
                   <a
-                    href={displayUser.linkedin}
+                    href={fetchedUser.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center space-x-3 text-sm hover:text-primary transition-colors"
@@ -318,9 +320,9 @@ export default function ProfilePage() {
                   </a>
                 )}
 
-                {displayUser.x && (
+                {fetchedUser?.x && (
                   <a
-                    href={displayUser.x}
+                    href={fetchedUser?.x}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center space-x-3 text-sm hover:text-primary transition-colors"
@@ -424,7 +426,7 @@ export default function ProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>Recent Projects</CardTitle>
-              <CardDescription>Your latest project activities</CardDescription>
+              <CardDescription>{fetchedUser?.name} latest project activities</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -442,7 +444,8 @@ export default function ProfilePage() {
                   {projects.slice(0, 3).map((project) => (
                     <div
                       key={`${project.owner}-${project.index}`}
-                      className="flex items-center justify-between p-4 border rounded-lg"
+                      className="flex items-center justify-between p-4 border rounded-lg cursor-pointer" 
+                      onClick={() => { router.push(`/projects/${project._id}`); }}
                     >
                       <div>
                         <h4 className="font-medium">
@@ -479,17 +482,20 @@ export default function ProfilePage() {
                 <div className="text-center py-8">
                   <FolderOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                   <p className="text-muted-foreground mb-4">
-                    You haven't created any projects yet.
+                    {fetchedUser?.name} hasn't created any projects yet.
                   </p>
-                  <Button onClick={() => router.push("/publish")}>
-                    Create Your First Project
-                  </Button>
+                  {currentUserWallet?.toLowerCase() === walletAddress?.toLowerCase() && (
+                    <Button onClick={() => router.push("/publish")}>
+                      Create Your First Project
+                    </Button>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Quick Actions */}
+          {currentUserWallet?.toLowerCase() === walletAddress?.toLowerCase() && (
           <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
@@ -534,6 +540,7 @@ export default function ProfilePage() {
               </div>
             </CardContent>
           </Card>
+          )}
         </div>
       </div>
     </div>

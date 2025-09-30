@@ -650,7 +650,8 @@ export default function ViewProject() {
                         (investorData, index) => (
                           <div
                             key={investorData.funder}
-                            className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                            className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                            onClick={() => router.push(`/profile/${investorData.funder}`)}
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex items-start space-x-3 flex-1">

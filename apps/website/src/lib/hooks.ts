@@ -243,9 +243,9 @@ export function useGetInvestedProjects() {
   };
 }
 
-export function useGetUserProjects() {
+export function useGetUserProjects(walletAddress:string) {
   // const [currentUser] = useAtom(currentUserAtom);
-  const { address: walletAddress } = useAccount();
+  // const { address: walletAddress } = useAccount();
   const address = walletAddress;
 
   console.log("Fetching projects for:", address);
