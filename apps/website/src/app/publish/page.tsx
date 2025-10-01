@@ -170,6 +170,9 @@ export default function PublishProjectPage() {
         body: JSON.stringify({
           title: formData.title,
           description: formData.description,
+          category: formData.category,
+          goal: parseFloat(formData.goal),
+          milestones: parseInt(formData.milestones),
           members: formData.members,
         }),
       });
@@ -183,6 +186,8 @@ export default function PublishProjectPage() {
           error instanceof Error ? error.message : String(error)
         }`,
       });
+
+    console.log(formData);
     } finally {
       hideLoadingDialog();
     }
