@@ -486,12 +486,21 @@ export default function ViewProject() {
               </div>
             </div>
           </div>
-          <Badge
+          <div>
+             <Badge
             variant={projectStats?.isFullyFunded ? "default" : "secondary"}
             className="text-sm px-3 py-1"
           >
             {projectStats?.isFullyFunded ? "Fully Funded" : "Active"}
           </Badge>
+          {/* Project Category */}
+          {project.category && (
+            <Badge variant="outline" className="text-sm px-3 py-1 ml-2 bg-slate-700 text-white">
+              {project.category}
+            </Badge>
+          )}
+          </div>
+         
         </div>
       </div>
 
@@ -504,9 +513,10 @@ export default function ViewProject() {
               <CardTitle>About This Project</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                {project.description || "No description available."}
-              </p>
+              <div
+                className="text-muted-foreground leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: project.description || "No description available." } as { __html: string }}
+              />
             </CardContent>
           </Card>
 

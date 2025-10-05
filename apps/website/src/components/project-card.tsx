@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Calendar, Target, TrendingUp, User, ExternalLink } from "lucide-react";
 import { IProject } from "@fundify/database";
 import Link from "next/link";
+import { styleText } from "util";
 
 interface ProjectCardProps {
   id: string;
@@ -109,6 +110,11 @@ export function ProjectCard({ id, project, viewMode = "grid" }: ProjectCardProps
     );
   }
 
+  function stripHtml(html: string) {
+  let doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+}
+
   // Grid / card view design
   return (
     <Card className="h-full hover:shadow-lg transition-shadow">
@@ -125,8 +131,8 @@ export function ProjectCard({ id, project, viewMode = "grid" }: ProjectCardProps
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground line-clamp-3">{project.description}</p>
-
+        <p className="text-sm text-muted-foreground line-clamp-3 prose max-w-none"   />
+        {(stripHtml(project.description.slice(0, 300) || ""))}
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Goal</span>

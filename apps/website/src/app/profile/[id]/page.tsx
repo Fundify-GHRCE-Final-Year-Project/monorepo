@@ -215,6 +215,11 @@ export default function ProfilePage() {
     );
   }
 
+  function stripHtml(html: string) {
+  let doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+}
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
@@ -452,9 +457,11 @@ export default function ProfilePage() {
                           {project.title || `Project #${project.index}`}
                         </h4>
                         <p className="text-sm text-muted-foreground">
-                          {project.description
+                          {/* {project.description
                             ? project.description.slice(0, 60) + "..."
-                            : "No description available"}
+                            : "No description available"} */}
+
+                            {(stripHtml(project.description.slice(0, 300) || "No description available"))}
                         </p>
                       </div>
                       <div className="text-right">

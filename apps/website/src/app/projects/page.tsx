@@ -20,8 +20,10 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { useAccount } from "wagmi";
+import { CATEGORY } from "@fundify/types";
 
 export default function ProjectsPage() {
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const { address: walletAddress } = useAccount();
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -29,8 +31,6 @@ export default function ProjectsPage() {
     "all" | "active" | "funded" | "ended"
   >("all");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-
-  
 
   // Debounce search term to avoid too many API calls
   useEffect(() => {
@@ -48,13 +48,12 @@ export default function ProjectsPage() {
     offset: 0,
   });
 
-
   // Client-side filtering as backup (in case API doesn't handle all filters)
-  const filteredProjects = useMemo(() => {
+ const filteredProjects = useMemo(() => {
     if (!projects) return [];
 
     return projects.filter((project) => {
-      // Search filter (backup - API should handle this)
+      // ✅ Search filter
       const matchesSearch =
         !searchTerm ||
         (project.title &&
@@ -66,7 +65,7 @@ export default function ProjectsPage() {
         (project.owner &&
           project.owner.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      // Status filter (backup - API should handle this)
+      // ✅ Status filter
       let matchesStatus = true;
       if (statusFilter === "active") {
         matchesStatus =
@@ -75,14 +74,18 @@ export default function ProjectsPage() {
         matchesStatus =
           project.isFullyFunded || project.fundingPercentage >= 100;
       } else if (statusFilter === "ended") {
-        // Consider a project ended if it's old or reached goal
-        const isOld = Date.now() / 1000 - project.timestamp > 90 * 24 * 60 * 60; // 90 days old
+        const isOld =
+          Date.now() / 1000 - project.timestamp > 90 * 24 * 60 * 60; // 90 days old
         matchesStatus = isOld || project.isFullyFunded;
       }
 
-      return matchesSearch && matchesStatus;
+      // ✅ Category filter
+      const matchesCategory =
+        selectedCategory === "All" || project.category === selectedCategory;
+
+      return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [projects, searchTerm, statusFilter]);
+  }, [projects, searchTerm, statusFilter, selectedCategory]);
 
   const projectStats = useMemo(() => {
     if (!projects || projects.length === 0) return null;
@@ -105,7 +108,6 @@ export default function ProjectsPage() {
 
   if (error) {
     return (
-
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <AlertCircle className="h-12 w-12 text-red-500" />
@@ -258,6 +260,27 @@ export default function ProjectsPage() {
           >
             Ended
           </Button>
+
+          {/* catogory projects selection */}
+          <div className="">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="border py-1 px-2 rounded text-sm"
+            >
+              {/* Default Option */}
+              <option value="All">ALL Category</option>
+
+              {/* Enum Options */}
+              {Object.values(CATEGORY).map((cat) => (
+                <option key={cat} value={cat} className="text-sm">
+                  {cat}
+                </option>
+              ))}
+            </select>
+
+            {/* <p className="mt-2">Selected: {selectedCategory}</p> */}
+          </div>
         </div>
       </div>
 
