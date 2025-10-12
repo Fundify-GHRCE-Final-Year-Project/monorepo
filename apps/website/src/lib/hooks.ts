@@ -36,60 +36,216 @@ type InvestmentDTO = {
   project?: any; // joined project snapshot
 };
 
+// export function useGetInvestedProjects() {
+//   const { address: walletAddress } = useAccount();
+
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+//   const [investments, setInvestments] = useState<InvestmentDTO[]>([]);
+//   const [enrichedInvestments, setEnrichedInvestments] = useState<InvestmentDTO[]>([]);
+
+//   // Step 1: Fetch initial investments
+//   useEffect(() => {
+//     if (!walletAddress) return;
+
+//     const fetchInvestments = async () => {
+//       setIsLoading(true);
+//       setError(null);
+//       try {
+//         const res = await fetch(`/api/users/0x70997970C51812dc3A010C7d01b50e0d17dc79C8/investments`, {
+//           cache: "no-store",
+//         });
+//         console.log("res ",res);
+//         const json = await res.json();
+//         if (!res.ok || !json.ok) {
+//           throw new Error(json.error || "Failed to load investments");
+//         }
+//         setInvestments(json.data);
+//       } catch (e: any) {
+//         setError(e.message || "Failed to load investments");
+//         setIsLoading(false);
+//       }
+//     };
+
+//     fetchInvestments();
+//   }, [walletAddress]);
+
+//   // Step 2: Fetch missing project data for investments with project: null
+//   useEffect(() => {
+//     if (investments.length === 0) {
+//       setIsLoading(false);
+//       return;
+//     }
+
+//     const enrichInvestments = async () => {
+//       try {
+//         // Find investments that need project data (project is null)
+//         const investmentsNeedingData = investments.filter(inv => inv.project === null);
+        
+//         if (investmentsNeedingData.length === 0) {
+//           // All investments already have project data
+//           setEnrichedInvestments(investments);
+//           setIsLoading(false);
+//           return;
+//         }
+
+//         // Create a map to store fetched projects
+//         const projectCache = new Map<string, IProject>();
+
+//         // Fetch project data for each investment that needs it
+//         const fetchPromises = investmentsNeedingData.map(async (inv) => {
+//           const cacheKey = `${inv.projectOwner}-${inv.projectIndex}`;
+          
+//           // Skip if already in cache
+//           if (projectCache.has(cacheKey)) {
+//             return null;
+//           }
+
+//           try {
+//             // Construct projectId - adjust this based on your API requirement
+//             // You might need to fetch by owner+index or have a different identifier
+//             const res = await fetch(`/api/project/${inv.projectIndex}`, {
+//               cache: "no-store",
+//             });
+//             const json = await res.json();
+            
+//             if (res.ok && json.ok && json.data) {
+//               projectCache.set(cacheKey, json.data);
+//               return json.data;
+//             }
+//           } catch (e) {
+//             console.error(`Failed to fetch project ${cacheKey}:`, e);
+//           }
+//           return null;
+//         });
+
+//         // Wait for all fetches to complete
+//         await Promise.all(fetchPromises);
+
+//         // Enrich investments with fetched project data
+//         const enriched = investments.map(inv => {
+//           if (inv.project !== null) {
+//             // Already has project data
+//             return inv;
+//           }
+
+//           const cacheKey = `${inv.projectOwner}-${inv.projectIndex}`;
+//           const fetchedProject = projectCache.get(cacheKey);
+
+//           if (fetchedProject) {
+//             return {
+//               ...inv,
+//               project: fetchedProject,
+//             };
+//           }
+
+//           // Still no project data available
+//           return inv;
+//         });
+
+//         setEnrichedInvestments(enriched);
+//       } catch (e: any) {
+//         console.error("Error enriching investments:", e);
+//         // Use original investments if enrichment fails
+//         setEnrichedInvestments(investments);
+//       } finally {
+//         setIsLoading(false);
+//       }
+//     };
+
+//     enrichInvestments();
+//   }, [investments]);
+
+//   // Extract unique projects from enriched investments
+//   const projects = useMemo(() => {
+//     const byKey = new Map<string, IProject>();
+    
+//     for (const inv of enrichedInvestments) {
+//       const p = inv.project;
+//       if (!p) continue;
+      
+//       const key = `${p.owner.toLowerCase()}#${p.index}`;
+//       if (!byKey.has(key)) {
+//         byKey.set(key, p);
+//       }
+//     }
+    
+//     return Array.from(byKey.values());
+//   }, [enrichedInvestments]);
+
+//   return { 
+//     projects, 
+//     investments: enrichedInvestments, 
+//     isLoading, 
+//     error 
+//   };
+// }
+
+// ---- Fetch user's own projects ----
+
 export function useGetInvestedProjects() {
-  const [currentUser] = useAtom(currentUserAtom);
-  const address = currentUser?.wallet || currentUser?.wallet;
+  const { address: walletAddress } = useAccount();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [investments, setInvestments] = useState<InvestmentDTO[]>([]);
 
   useEffect(() => {
-    if (!address) return;
+    if (!walletAddress) return;
 
-    const fetchData = async () => {
+    const fetchInvestments = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/users/${address}/investments`, {
+        const res = await fetch(`/api/users/0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266/investments`, {
           cache: "no-store",
         });
         const json = await res.json();
+        
         if (!res.ok || !json.ok) {
           throw new Error(json.error || "Failed to load investments");
         }
-        setInvestments(json.data);
+        
+        setInvestments(json.data || []);
       } catch (e: any) {
         setError(e.message || "Failed to load investments");
+        setInvestments([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
-  }, [address]);
+    fetchInvestments();
+  }, [walletAddress]);
 
-  // Return unique invested projects
+  // Extract unique projects from investments
   const projects = useMemo(() => {
-    const byKey = new Map<string, any>();
+    const byKey = new Map<string, IProject>();
+    
     for (const inv of investments) {
       const p = inv.project;
       if (!p) continue;
+      
       const key = `${p.owner.toLowerCase()}#${p.index}`;
       if (!byKey.has(key)) {
         byKey.set(key, p);
       }
     }
+    
     return Array.from(byKey.values());
   }, [investments]);
 
-  return { projects, investments, isLoading, error };
+  return { 
+    projects, 
+    investments, 
+    isLoading, 
+    error 
+  };
 }
 
-// ---- Fetch user's own projects ----
-export function useGetUserProjects() {
+export function useGetUserProjects(walletAddress:string) {
   // const [currentUser] = useAtom(currentUserAtom);
-  const { address: walletAddress } = useAccount();
+  // const { address: walletAddress } = useAccount();
   const address = walletAddress;
 
   console.log("Fetching projects for:", address);

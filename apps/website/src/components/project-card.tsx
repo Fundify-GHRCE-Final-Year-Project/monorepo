@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Calendar, Target, TrendingUp, User, ExternalLink } from "lucide-react";
 import { IProject } from "@fundify/database";
 import Link from "next/link";
+import { styleText } from "util";
 
 interface ProjectCardProps {
   id: string;
@@ -46,9 +47,9 @@ export function ProjectCard({ id, project, viewMode = "grid" }: ProjectCardProps
   };
 
   // Safe number formatting
-  const safeToFixed = (num: number | undefined, decimals: number = 2): string => {
-    return (num || 0).toFixed(decimals);
-  };
+  // const safeToFixed = (num: number | undefined, decimals: number = 2): string => {
+  //   return (num || 0).toFixed(decimals);
+  // };
 
   const handleViewProject = () => {
 
@@ -80,11 +81,11 @@ export function ProjectCard({ id, project, viewMode = "grid" }: ProjectCardProps
                 </div>
                 <div className="flex items-center space-x-1">
                   <Target className="h-4 w-4" />
-                  <span>{safeToFixed(project.goal)} ETH</span>
+                  <span>{(project.goal)} ETH</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <TrendingUp className="h-4 w-4" />
-                  <span>{safeToFixed(project.funded)} ETH</span>
+                  <span>{(project.funded)} ETH</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Calendar className="h-4 w-4" />
@@ -95,7 +96,7 @@ export function ProjectCard({ id, project, viewMode = "grid" }: ProjectCardProps
 
             <div className="flex items-center space-x-4 ml-6">
               <div className="text-right">
-                <div className="text-sm font-medium">{safeToFixed(fundingPercentage, 1)}% Funded</div>
+                <div className="text-sm font-medium">{(fundingPercentage).toFixed(1)}% Funded</div>
                 <Progress value={fundingPercentage} className="w-24 mt-1" />
               </div>
 
@@ -108,6 +109,11 @@ export function ProjectCard({ id, project, viewMode = "grid" }: ProjectCardProps
       </Card>
     );
   }
+
+  function stripHtml(html: string) {
+  let doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+}
 
   // Grid / card view design
   return (
@@ -125,23 +131,23 @@ export function ProjectCard({ id, project, viewMode = "grid" }: ProjectCardProps
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground line-clamp-3">{project.description}</p>
-
+        <p className="text-sm text-muted-foreground line-clamp-3 prose max-w-none"   />
+        {(stripHtml(project.description.slice(0, 300) || ""))}
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Goal</span>
-            <span className="font-medium">{safeToFixed(project.goal)} ETH</span>
+            <span className="font-medium">{(project.goal)} ETH</span>
           </div>
 
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Funded</span>
-            <span className="font-medium">{safeToFixed(project.funded)} ETH</span>
+            <span className="font-medium">{(project.funded)} ETH</span>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Progress</span>
-              <span className="font-medium">{safeToFixed(fundingPercentage, 1)}%</span>
+              <span className="font-medium">{(fundingPercentage).toFixed(1)}%</span>
             </div>
             <Progress value={fundingPercentage} />
           </div>

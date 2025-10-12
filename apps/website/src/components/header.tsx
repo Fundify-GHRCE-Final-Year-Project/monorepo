@@ -166,7 +166,7 @@ export function Header() {
                   <span>{formatWalletAddress(walletAddress!)}</span>
                 </Badge>
 
-                <Link href="/profile">
+                <Link href={`/profile/${walletAddress}`}>
                   <Button
                     variant="outline"
                     size="sm"

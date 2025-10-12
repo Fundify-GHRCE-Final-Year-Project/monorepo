@@ -38,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CATEGORY } from "@fundify/types";
+import { Editor } from "@tinymce/tinymce-react";
 
 export default function PublishProjectPage() {
   const { address: walletAddress } = useAccount();
@@ -56,6 +57,10 @@ export default function PublishProjectPage() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleEditorChange = (content: any) => {
+    formData.description = content;
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -165,6 +170,9 @@ export default function PublishProjectPage() {
         body: JSON.stringify({
           title: formData.title,
           description: formData.description,
+          category: formData.category,
+          goal: parseFloat(formData.goal),
+          milestones: parseInt(formData.milestones),
           members: formData.members,
         }),
       });
@@ -178,6 +186,8 @@ export default function PublishProjectPage() {
           error instanceof Error ? error.message : String(error)
         }`,
       });
+
+    console.log(formData);
     } finally {
       hideLoadingDialog();
     }
@@ -249,8 +259,13 @@ export default function PublishProjectPage() {
                       onChange={(e) =>
                         handleInputChange("title", e.target.value)
                       }
-                      className={errors.title ? "border-red-500 w-50" : "w-50"}
+                      className={
+                        errors.title ? "border-red-500 w-50" : "w-full"
+                      }
                     />
+                  </div>
+
+                  <div className="flex items-center gap-4 mt-5 w-full">
                     <DropdownMenu>
                       <DropdownMenuTrigger className="h-10 w-56 px-4 border border-gray rounded-lg">
                         {formData.category == "" ? (
@@ -298,7 +313,50 @@ export default function PublishProjectPage() {
                   >
                     Project Description *
                   </label>
-                  <Textarea
+                  <Editor
+                    apiKey="nx5yz9801516ctk8lmn7rq43lvutt49g8bmxpo3c6lpad5p4" // free key works fine
+                    // onInit={(_, editor) => (editorRef.current = editor)}
+                    init={{
+                      height: 400,
+                      menubar: false,
+                      plugins: [
+                        "link",
+                        "lists",
+                        "autolink",
+                        "preview",
+                        "wordcount",
+                        "advlist",
+                      ],
+                      toolbar:
+                        "undo redo | formatselect | " +
+                        "bold italic underline | forecolor backcolor | " + // ✅ colors
+                        "fontsizeselect fontselect | " + // ✅ size + font
+                        "bullist numlist | link | preview",
+
+                      // ✅ enable font size options
+                      fontsize_formats:
+                        "8px 10px 12px 14px 16px 18px 24px 36px 48px 72px",
+
+                      // ✅ enable font family options
+                      font_formats: `
+            Arial=arial,helvetica,sans-serif;
+            Courier New=courier new,courier,monospace;
+            Georgia=georgia,palatino,serif;
+            Tahoma=tahoma,arial,helvetica,sans-serif;
+            Times New Roman=times new roman,times,serif;
+            Verdana=verdana,geneva,sans-serif;
+            Roboto=roboto,sans-serif;
+          `,
+
+                      // ✅ tiny css so your content matches
+                      content_style: `
+            body { font-family:Helvetica,Arial,sans-serif; font-size:14px }
+          `,
+                    }}
+                    onEditorChange={handleEditorChange}
+                  />
+
+                  {/* <Textarea
                     id="description"
                     placeholder="Describe your project, its goals, and what makes it unique"
                     value={formData.description}
@@ -307,7 +365,7 @@ export default function PublishProjectPage() {
                     }
                     rows={4}
                     className={errors.description ? "border-red-500" : ""}
-                  />
+                  /> */}
                   {errors.description && (
                     <p className="text-sm text-red-500 mt-1">
                       {errors.description}

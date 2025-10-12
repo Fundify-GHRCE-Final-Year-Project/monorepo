@@ -23,8 +23,10 @@ export async function POST(
         $set: {
           title: body.title,
           description: body.description,
+          category: body.category as CATEGORY,
+          goal: body.goal,
+          milestones: body.milestones,
           members: body.members,
-          category: body.category,
         },
       },
       {
