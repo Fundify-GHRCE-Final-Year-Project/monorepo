@@ -56,7 +56,7 @@ export interface IUser extends User, Document {}
 
 const UserSchema = new Schema<IUser>(
   {
-    wallet: { type: String, required: true, unique: true },
+    wallet: { type: String, required: true, index: true, unique: true },
     name: { type: String },
     country: { type: String },
     role: { type: String },
