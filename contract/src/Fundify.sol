@@ -92,7 +92,6 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     function initialize() public initializer {
         __Ownable_init(msg.sender);
-        __UUPSUpgradeable_init();
         VOTING_DEADLINE = 7 days;
         VOTING_COOLDOWN = 7 days;
         REQUIRED_VOTES = 60;

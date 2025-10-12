@@ -1,5 +1,13 @@
 FROM node:18-alpine AS base
 
+# Add build arguments
+ARG NEXT_PUBLIC_RPC_URL
+ARG NEXT_PUBLIC_CONTRACT_ADDRESS
+
+# Set them as environment variables for the build
+ENV NEXT_PUBLIC_RPC_URL=$NEXT_PUBLIC_RPC_URL
+ENV NEXT_PUBLIC_CONTRACT_ADDRESS=$NEXT_PUBLIC_CONTRACT_ADDRESS
+
 FROM base AS builder
 RUN apk update && apk add --no-cache libc6-compat
 WORKDIR /app
