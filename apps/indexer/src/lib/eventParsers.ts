@@ -2,6 +2,8 @@ import type {
   ProjectCreated,
   ProjectFunded,
   ProjectFundsReleased,
+  VotingCycleInitiated,
+  Voted,
 } from "../types/events";
 import { ethers } from "ethers";
 
@@ -58,7 +60,39 @@ export function parseProjectFundsReleasedLog(
       index: Number(log.args[1]),
       amount: Number(log.args[2] / BigInt(10 ** 18)),
       to: String(log.args[3]),
-      timestamp: Number(log.args[4]),
+      cycle: Number(log.args[4]),
+      timestamp: Number(log.args[5]),
+    };
+  }
+  return null;
+}
+
+export function parseVotingCycleInitiatedLog(
+  log: ethers.LogDescription | null
+): VotingCycleInitiated | null {
+  if (log && log.args) {
+    return {
+      projectOwner: String(log.args[0]),
+      projectIndex: Number(log.args[1]),
+      amount: Number(log.args[2] / BigInt(10 ** 18)),
+      depositWallet: String(log.args[3]),
+      votingCycle: Number(log.args[4]),
+      votingDeadline: Number(log.args[5]),
+      votesNeeded: Number(log.args[6])
+    };
+  }
+  return null;
+}
+
+export function parseVotedLog(
+  log: ethers.LogDescription | null
+): Voted | null {
+  if (log && log.args) {
+    return {
+      projectOwner: String(log.args[0]),
+      projectIndex: Number(log.args[1]),
+      voteBy: String(log.args[2]),
+      votingCycle: Number(log.args[3])
     };
   }
   return null;

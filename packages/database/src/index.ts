@@ -5,6 +5,9 @@ import {
   UserModel,
   IProject,
   IInvestment,
+  VotingCycleModel,
+  VoteModel,
+  ProjectFundsReleasedModel
 } from "./models/models";
 
 let cached: typeof mongoose | null = null;
@@ -23,6 +26,14 @@ async function connectDB() {
   return cached;
 }
 
-export { ProjectModel, InvestmentModel, UserModel, connectDB };
+export { 
+  ProjectModel, 
+  InvestmentModel, 
+  UserModel, 
+  VotingCycleModel, 
+  VoteModel, 
+  ProjectFundsReleasedModel, 
+  connectDB 
+};
 
 export type { IProject, IInvestment };

@@ -56,60 +56,22 @@ contract DeployAndCreateFundify is Script {
 
         vm.stopBroadcast();
 
-        vm.startBroadcast(funder4PrivateKey);
-
-        fundify.fundProject{value: 2 ether}(userPublicKey, 0);
-        fundify.fundProject{value: 1 ether}(userPublicKey, 1);
-        fundify.fundProject{value: 2 ether}(userPublicKey, 2);
-
-        vm.stopBroadcast();
-
-        vm.startBroadcast(funder5PrivateKey);
-
-        fundify.fundProject{value: 2 ether}(userPublicKey, 0);
-        fundify.fundProject{value: 1 ether}(userPublicKey, 1);
-        fundify.fundProject{value: 2 ether}(userPublicKey, 2);
-
+        vm.startBroadcast(userPublicKey);
+        fundify.releaseFunds(0, 1 ether, userPublicKey, true);
         vm.stopBroadcast();
 
         vm.startBroadcast(funder1PrivateKey);
-
-        fundify.createProject(10 ether, 2);
-        fundify.createProject(5 ether, 3);
-        fundify.createProject(20 ether, 4);
-
+        fundify.voteOnReleaseRequest(userPublicKey, 0);
         vm.stopBroadcast();
 
         vm.startBroadcast(funder2PrivateKey);
-
-        fundify.createProject(10 ether, 2);
-        fundify.createProject(5 ether, 3);
-        fundify.createProject(20 ether, 4);
-
+        fundify.voteOnReleaseRequest(userPublicKey, 0);
         vm.stopBroadcast();
 
-        vm.startBroadcast(funder3PrivateKey);
+        vm.warp(block.timestamp + 7 days);
 
-        fundify.createProject(10 ether, 2);
-        fundify.createProject(5 ether, 3);
-        fundify.createProject(20 ether, 4);
-
-        vm.stopBroadcast();
-
-        vm.startBroadcast(funder4PrivateKey);
-
-        fundify.createProject(10 ether, 2);
-        fundify.createProject(5 ether, 3);
-        fundify.createProject(20 ether, 4);
-
-        vm.stopBroadcast();
-
-        vm.startBroadcast(funder5PrivateKey);
-
-        fundify.createProject(10 ether, 2);
-        fundify.createProject(5 ether, 3);
-        fundify.createProject(20 ether, 4);
-
+        vm.startBroadcast(userPublicKey);
+        fundify.releaseFunds(0, 1 ether, userPublicKey, false);
         vm.stopBroadcast();
     }
 }

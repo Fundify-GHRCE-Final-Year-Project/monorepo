@@ -85,7 +85,23 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         uint256 index,
         uint256 amount,
         address to,
+        uint256 cycle,
         uint256 timestamp
+    );
+    event VotingCycleInitiated(
+        address projectOwner,
+        uint256 projectIndex,
+        uint256 amount,
+        address depositWallet,
+        uint256 votingCycle,
+        uint256 votingDeadline,
+        uint256 votesNeeded
+    );
+    event Voted(
+        address projectOwner,
+        uint256 projectIndex,
+        address voteBy,
+        uint256 votingCycle
     );
 
     function _authorizeUpgrade(address newImpl) internal override onlyOwner {}
@@ -167,6 +183,12 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
             voted[_projectOwner][_projectIndex][cycle][msg.sender] = true;
             votes[_projectOwner][_projectIndex][cycle] += 1;
         }
+        emit Voted(
+            _projectOwner,
+            _projectIndex,
+            msg.sender,
+            cycle
+        );
     }
 
     function releaseFunds(
@@ -196,6 +218,16 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
             votingCycle[msg.sender][_projectIndex] += 1;
             cycle = votingCycle[msg.sender][_projectIndex];
             votingDeadline[msg.sender][_projectIndex][cycle] = block.timestamp + VOTING_DEADLINE;
+            uint256 requiredVotes = (investorCount[msg.sender][_projectIndex] * REQUIRED_VOTES) / 100;
+            emit VotingCycleInitiated(
+                msg.sender,
+                _projectIndex,
+                _amount,
+                _to,
+                cycle,
+                votingDeadline[msg.sender][_projectIndex][cycle],
+                requiredVotes
+            );
         }
         else {
             uint256 cycle = votingCycle[msg.sender][_projectIndex];
@@ -205,7 +237,7 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
             uint256 votesGathered = votes[msg.sender][_projectIndex][cycle];
             uint256 requiredVotes = (investorCount[msg.sender][_projectIndex] * REQUIRED_VOTES) / 100;
             if (votesGathered >= requiredVotes) {
-                _releaseFunds(project, _amount, _to);
+                _releaseFunds(project, _amount, _to, cycle);
             }
             else revert NotEnoughVotes();
         }
@@ -214,7 +246,8 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     function _releaseFunds(
         Project storage _project,
         uint256 _amount,
-        address _to
+        address _to,
+        uint256 cycle
     ) internal {
         _project.released += _amount;
         (bool sent, ) = payable(_to).call{value: _amount}("");
@@ -225,6 +258,7 @@ contract Fundify is Initializable, UUPSUpgradeable, OwnableUpgradeable {
             _project.index,
             _amount,
             _to,
+            cycle,
             block.timestamp
         );
     }

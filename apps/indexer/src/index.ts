@@ -3,9 +3,12 @@ import {
   parseProjectCreatedLog,
   parseProjectFundedLog,
   parseProjectFundsReleasedLog,
+  parseVotingCycleInitiatedLog,
+  parseVotedLog,
 } from "./lib/eventParsers";
 import { connectDB } from "@fundify/database";
 import { ProjectModel, InvestmentModel } from "@fundify/database";
+import { VotingCycleModel, VoteModel, ProjectFundsReleasedModel } from "@fundify/database";
 import { getRandomProject } from "./lib/dummyProjects";
 import { ethers } from "ethers";
 
@@ -29,6 +32,9 @@ async function fetchAndProcess(fromBlock: number, toBlock: number) {
 
   for (const log of logs) {
     const parsedLog = contractInterface.parseLog(log);
+    const block = await provider.getBlock(log.blockNumber);
+    const blockTimestamp = block?.timestamp || 0;
+    
     console.log("Indexed :-");
     console.log(parsedLog?.name);
     console.log("Data: ", parsedLog?.args);
@@ -85,6 +91,7 @@ async function fetchAndProcess(fromBlock: number, toBlock: number) {
       case "ProjectFundsReleased":
         let projectFundsReleased = parseProjectFundsReleasedLog(parsedLog);
         if (projectFundsReleased) {
+          // Update project released amount
           const updatedProject = await ProjectModel.updateOne(
             {
               owner: projectFundsReleased.owner,
@@ -94,6 +101,79 @@ async function fetchAndProcess(fromBlock: number, toBlock: number) {
           );
           console.log("Updated Project Fund Amount At MongoDB :-");
           console.log(updatedProject);
+          console.log("");
+
+          // Save ProjectFundsReleased document
+          const savedProjectFundsReleased = await ProjectFundsReleasedModel.create({
+            owner: projectFundsReleased.owner,
+            index: projectFundsReleased.index,
+            amount: projectFundsReleased.amount,
+            to: projectFundsReleased.to,
+            cycle: projectFundsReleased.cycle,
+            timestamp: projectFundsReleased.timestamp,
+          });
+          console.log("Saved ProjectFundsReleased To MongoDB :-");
+          console.log(savedProjectFundsReleased);
+          console.log("");
+
+          // Mark the relevant VotingCycle as ended
+          const updatedVotingCycle = await VotingCycleModel.updateOne(
+            {
+              projectOwner: projectFundsReleased.owner,
+              projectIndex: projectFundsReleased.index,
+              votingCycle: projectFundsReleased.cycle,
+            },
+            { $set: { ended: true } }
+          );
+          console.log("Updated VotingCycle ended status At MongoDB :-");
+          console.log(updatedVotingCycle);
+          console.log("");
+        } else console.log("Something wrong happened!");
+        break;
+      case "VotingCycleInitiated":
+        let votingCycleInitiated = parseVotingCycleInitiatedLog(parsedLog);
+        if (votingCycleInitiated) {
+          const savedVotingCycle = await VotingCycleModel.create({
+            projectOwner: votingCycleInitiated.projectOwner,
+            projectIndex: votingCycleInitiated.projectIndex,
+            amount: votingCycleInitiated.amount,
+            depositWallet: votingCycleInitiated.depositWallet,
+            votingCycle: votingCycleInitiated.votingCycle,
+            votingDeadline: votingCycleInitiated.votingDeadline,
+            votesNeeded: votingCycleInitiated.votesNeeded,
+            votesGathered: 0,
+            ended: false,
+          });
+          console.log("Saved VotingCycle To MongoDB :-");
+          console.log(savedVotingCycle);
+          console.log("");
+        } else console.log("Something wrong happened!");
+        break;
+      case "Voted":
+        let voted = parseVotedLog(parsedLog);
+        if (voted) {
+          // Save the vote
+          const savedVote = await VoteModel.create({
+            projectOwner: voted.projectOwner,
+            projectIndex: voted.projectIndex,
+            voteBy: voted.voteBy,
+            votingCycle: voted.votingCycle,
+          });
+          console.log("Saved Vote To MongoDB :-");
+          console.log(savedVote);
+          console.log("");
+
+          // Increment votesGathered for the relevant VotingCycle
+          const updatedVotingCycle = await VotingCycleModel.updateOne(
+            {
+              projectOwner: voted.projectOwner,
+              projectIndex: voted.projectIndex,
+              votingCycle: voted.votingCycle,
+            },
+            { $inc: { votesGathered: 1 } }
+          );
+          console.log("Updated VotingCycle votesGathered At MongoDB :-");
+          console.log(updatedVotingCycle);
           console.log("");
         } else console.log("Something wrong happened!");
         break;
