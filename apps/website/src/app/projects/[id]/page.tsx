@@ -27,6 +27,9 @@ import {
   ExternalLink,
   PieChart,
   Clock,
+  Vote,
+  CheckSquare,
+  MessageSquare,
 } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { useAccount, useWriteContract } from "wagmi";
@@ -93,6 +96,28 @@ interface InvestmentsData {
   investmentsByFunder: InvestmentsByFunder[];
 }
 
+interface VotingCycle {
+  _id: string;
+  projectOwner: string;
+  projectIndex: number;
+  amount: number;
+  depositWallet: string;
+  votingCycle: number;
+  votingDeadline: number;
+  votesNeeded: number;
+  votesGathered: number;
+  ended: boolean;
+  createdAt: string;
+}
+
+interface VoteData {
+  _id: string;
+  projectOwner: string;
+  projectIndex: number;
+  voteBy: string;
+  votingCycle: number;
+}
+
 export default function ViewProject() {
   const params = useParams();
   const { address: walletAddress } = useAccount();
@@ -119,12 +144,20 @@ export default function ViewProject() {
   const [membersLoading, setMembersLoading] = useState(false);
   const [investAmount, setInvestAmount] = useState("");
   const [isInvesting, setIsInvesting] = useState(false);
+  const [projectIndex, setProjectIndex] = useState<number>(-1);
 
-  // New state for investments
+  // State for investments
   const [investmentsData, setInvestmentsData] =
     useState<InvestmentsData | null>(null);
   const [investmentsLoading, setInvestmentsLoading] = useState(false);
   const [investmentsError, setInvestmentsError] = useState<string | null>(null);
+
+  // State for voting
+  const [votingCycle, setVotingCycle] = useState<VotingCycle | null>(null);
+  const [votes, setVotes] = useState<VoteData[]>([]);
+  const [votingLoading, setVotingLoading] = useState(false);
+  const [isVoting, setIsVoting] = useState(false);
+  const [userHasInvested, setUserHasInvested] = useState(false);
 
   // Calculate project statistics
   const projectStats = useMemo(() => {
@@ -156,13 +189,59 @@ export default function ViewProject() {
   // Check if current user is the owner
   const isOwner = useMemo(() => {
     return walletAddress && project?.owner
-      ? walletAddress.toLowerCase() === project.owner.toLowerCase()
+      ? walletAddress=== project.owner
       : false;
   }, [walletAddress, project?.owner]);
 
-  // Fetch investments data if user is the owner
+  // Calculate voting statistics
+  const votingStats = useMemo(() => {
+    if (!votingCycle) {
+      return {
+        voted: 0,
+        pending: 0,
+        total: 0,
+        votingPercentage: 0,
+        needsMore: 0,
+        needed: 0,
+      };
+    }
+
+    const voted = votingCycle.votesGathered;
+    const needed = votingCycle.votesNeeded;
+    const total = investmentsData?.summary.totalInvestors || 0;
+    const pending = Math.max(total - voted, 0);
+    const votingPercentage = needed > 0 ? (voted / needed) * 100 : 0;
+    const needsMore = Math.max(needed - voted, 0);
+
+    return {
+      voted,
+      pending,
+      total,
+      votingPercentage,
+      needsMore,
+      needed,
+    };
+  }, [votingCycle, investmentsData]);
+
+  // Check if user has voted
+  const userHasVoted = useMemo(() => {
+    if (!walletAddress || !votes || !votingCycle) return false;
+    return votes.some(
+      (v) =>
+        v.voteBy === walletAddress &&
+        v.votingCycle === votingCycle.votingCycle
+    );
+  }, [walletAddress, votes, votingCycle]);
+
+  // Check if voting deadline has passed
+  const votingDeadlinePassed = useMemo(() => {
+    if (!votingCycle) return false;
+    return Date.now() / 1000 > votingCycle.votingDeadline;
+  }, [votingCycle]);
+
+  // Fetch investments data if user is the owner or investor
   useEffect(() => {
-    if (!projectId || !isOwner) return;
+    if (!projectId) return;
 
     const fetchInvestments = async () => {
       setInvestmentsLoading(true);
@@ -170,6 +249,9 @@ export default function ViewProject() {
       try {
         const response = await fetch(`/api/project/${projectId}/investments`);
         const result = await response.json();
+
+        console.log("Project Info", result.data.project.index);
+        setProjectIndex(result.data.project.index);
 
         if (result.ok) {
           setInvestmentsData(result.data);
@@ -185,7 +267,55 @@ export default function ViewProject() {
     };
 
     fetchInvestments();
-  }, [projectId, isOwner]);
+  }, [projectId]);
+
+  // Fetch voting cycle and votes
+  useEffect(() => {
+    if (projectIndex === -1) return;
+
+    const fetchVotingData = async () => {
+      setVotingLoading(true);
+      try {
+        // Fetch voting cycle
+        const cycleResponse = await fetch(
+          `/api/voting-cycle/project/${projectIndex}`
+        );
+        if (cycleResponse.ok) {
+          const cycleData = await cycleResponse.json();
+          setVotingCycle(cycleData);
+
+          // Fetch votes for this cycle
+          const votesResponse = await fetch(
+            `/api/votes/project/${projectIndex}`
+          );
+          if (votesResponse.ok) {
+            const votesData = await votesResponse.json();
+            setVotes(votesData);
+          }
+        } else {
+          // No active voting cycle
+          setVotingCycle(null);
+          setVotes([]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch voting data:", err);
+      } finally {
+        setVotingLoading(false);
+      }
+    };
+
+    fetchVotingData();
+  }, [projectIndex]);
+
+  // Check if current user has invested
+  useEffect(() => {
+    if (!walletAddress || !investmentsData) return;
+
+    const hasInvested = investmentsData.investmentsByFunder.some(
+      (inv) => inv.funder === walletAddress
+    );
+    setUserHasInvested(hasInvested);
+  }, [walletAddress, investmentsData]);
 
   // Fetch owner info when project is loaded
   useEffect(() => {
@@ -214,7 +344,6 @@ export default function ViewProject() {
 
     const fetchMembers = async () => {
       setMembersLoading(true);
-      console.log(project);
       try {
         const memberPromises = project.members.map((memberWallet: string) =>
           fetchUserByWallet(memberWallet).catch((err) => {
@@ -227,7 +356,6 @@ export default function ViewProject() {
         const validMembers = memberResults.filter(
           (member): member is User => member !== null && member.wallet
         );
-        console.log(validMembers);
         setMembers(validMembers);
       } catch (err) {
         console.error("Failed to fetch members info", err);
@@ -350,6 +478,67 @@ export default function ViewProject() {
     }
   };
 
+  // Handle voting
+  const handleVote = async () => {
+    if (!walletAddress || !votingCycle || !project) {
+      toast.error("Error", {
+        description: "Missing required information",
+      });
+      return;
+    }
+
+    if (!userHasInvested) {
+      toast.error("Not Eligible", {
+        description: "Only investors can vote",
+      });
+      return;
+    }
+
+    if (userHasVoted) {
+      toast.info("Already Voted", {
+        description: "You have already cast your vote for this cycle",
+      });
+      return;
+    }
+
+    setIsVoting(true);
+    try {
+      const response = await fetch("/api/votes/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          projectIndex: projectIndex,
+          votingCycleNumber: votingCycle.votingCycle,
+          investorWallet: walletAddress,
+          projectOwner: project.owner,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("Vote Submitted", {
+          description: "Your vote has been recorded successfully",
+        });
+        // Refresh voting data
+        window.location.reload();
+      } else {
+        toast.error("Vote Failed", {
+          description: result.message || "Failed to submit vote",
+        });
+      }
+    } catch (error) {
+      console.error("Vote error:", error);
+      toast.error("Error", {
+        description: "Failed to submit vote",
+      });
+    } finally {
+      setIsVoting(false);
+    }
+  };
+
   // Format timestamp to readable date
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString("en-US", {
@@ -361,20 +550,13 @@ export default function ViewProject() {
     });
   };
 
-  const getInvestorData = async (address: string) => {
-    const userData = await fetchUserByWallet(address);
-    return userData;
-  };
-
   const [investorDetails, setInvestorDetails] = useState<{
     [address: string]: any;
   }>({});
 
   const fetchInvestorData = async (funder: string) => {
     try {
-      console.log("Fetching data for funder:", funder);
       const data = await fetchUserByWallet(funder);
-      console.log("funder data",data);
       setInvestorDetails((prev) => ({ ...prev, [funder]: data }));
     } catch (err) {
       console.error("Error fetching investor data:", err);
@@ -389,7 +571,6 @@ export default function ViewProject() {
         }
       });
     }
-    console.log(investmentsData);
   }, [investmentsData]);
 
   // Early return: invalid projectId
@@ -487,20 +668,21 @@ export default function ViewProject() {
             </div>
           </div>
           <div>
-             <Badge
-            variant={projectStats?.isFullyFunded ? "default" : "secondary"}
-            className="text-sm px-3 py-1"
-          >
-            {projectStats?.isFullyFunded ? "Fully Funded" : "Active"}
-          </Badge>
-          {/* Project Category */}
-          {project.category && (
-            <Badge variant="outline" className="text-sm px-3 py-1 ml-2 bg-slate-700 text-white">
-              {project.category}
+            <Badge
+              variant={projectStats?.isFullyFunded ? "default" : "secondary"}
+              className="text-sm px-3 py-1"
+            >
+              {projectStats?.isFullyFunded ? "Fully Funded" : "Active"}
             </Badge>
-          )}
+            {project.category && (
+              <Badge
+                variant="outline"
+                className="text-sm px-3 py-1 ml-2 bg-slate-700 text-white"
+              >
+                {project.category}
+              </Badge>
+            )}
           </div>
-         
         </div>
       </div>
 
@@ -515,7 +697,11 @@ export default function ViewProject() {
             <CardContent>
               <div
                 className="text-muted-foreground leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: project.description || "No description available." } as { __html: string }}
+                dangerouslySetInnerHTML={
+                  {
+                    __html: project.description || "No description available.",
+                  } as { __html: string }
+                }
               />
             </CardContent>
           </Card>
@@ -585,6 +771,279 @@ export default function ViewProject() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Voting Section - Visible to both owner and investors */}
+          {votingCycle && projectIndex !== -1 && (
+            <Card className="border-2 border-blue-200 bg-blue-50/30">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Vote className="h-5 w-5 mr-2 text-blue-600" />
+                  Active Voting Cycle
+                  {votingLoading && (
+                    <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  {isOwner
+                    ? "Track voting progress for your fund release request"
+                    : userHasInvested
+                    ? "Cast your vote to approve the fund release"
+                    : "Only investors can vote on fund releases"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Voting Details */}
+                  <div className="bg-white p-4 rounded-lg space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm text-muted-foreground">
+                          Amount Requested:
+                        </span>
+                        <p className="text-lg font-bold text-blue-600">
+                          {votingCycle.amount} ETH
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">
+                          Deposit Wallet:
+                        </span>
+                        <p className="text-xs font-mono mt-1 truncate">
+                          {votingCycle.depositWallet}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">
+                          Voting Cycle:
+                        </span>
+                        <p className="text-lg font-bold">
+                          #{votingCycle.votingCycle}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">
+                          Deadline:
+                        </span>
+                        <p className="text-sm font-medium">
+                          {formatDate(votingCycle.votingDeadline)}
+                        </p>
+                        {votingDeadlinePassed && (
+                          <Badge variant="destructive" className="mt-1">
+                            Expired
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Voting Statistics */}
+                  <div>
+                    <h4 className="font-semibold text-lg mb-3 flex items-center">
+                      <PieChart className="h-5 w-5 mr-2" />
+                      Voting Progress
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div className="flex items-center justify-center mb-1">
+                          <CheckSquare className="h-4 w-4 text-green-600 mr-1" />
+                          <div className="text-2xl font-bold text-green-600">
+                            {votingStats.voted}
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Votes Cast
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-center mb-1">
+                          <Clock className="h-4 w-4 text-gray-600 mr-1" />
+                          <div className="text-2xl font-bold text-gray-600">
+                            {votingStats.pending}
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Pending
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center justify-center mb-1">
+                          <Target className="h-4 w-4 text-blue-600 mr-1" />
+                          <div className="text-2xl font-bold text-blue-600">
+                            {votingStats.needed}
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Votes Needed
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <div className="flex items-center justify-center mb-1">
+                          <Users className="h-4 w-4 text-orange-600 mr-1" />
+                          <div className="text-2xl font-bold text-orange-600">
+                            {votingStats.needsMore}
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Still Needed
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Voting Progress Bar */}
+                    <div className="mt-4">
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="font-medium">
+                          Voting Progress ({votingStats.voted} /{" "}
+                          {votingStats.needed})
+                        </span>
+                        <span className="font-bold text-green-600">
+                          {votingStats.votingPercentage.toFixed(1)}%
+                        </span>
+                      </div>
+                      <Progress
+                        value={votingStats.votingPercentage}
+                        className="h-2"
+                      />
+                      {votingStats.voted >= votingStats.needed && (
+                        <div className="mt-2 flex items-center text-green-600 text-sm">
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          <span>
+                            Voting threshold reached! Release can be processed.
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Voting Actions - Only for investors who haven't voted */}
+                  {!isOwner &&
+                    userHasInvested &&
+                    !userHasVoted &&
+                    !votingDeadlinePassed && (
+                      <div className="bg-white p-4 rounded-lg border-2 border-blue-300">
+                        <h4 className="font-semibold mb-3">Cast Your Vote</h4>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          As an investor, your vote helps approve fund releases
+                          for this project. By voting, you approve the release
+                          of {votingCycle.amount} ETH to{" "}
+                          {votingCycle.depositWallet.slice(0, 10)}...
+                        </p>
+                        <Button
+                          onClick={handleVote}
+                          className="w-full bg-green-600 hover:bg-green-700"
+                          disabled={isVoting}
+                        >
+                          {isVoting ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Submitting Vote...
+                            </>
+                          ) : (
+                            <>
+                              <CheckSquare className="h-4 w-4 mr-2" />
+                              Cast Vote
+                            </>
+                          )}
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-2 text-center">
+                          Note: Voting in this system means approving the
+                          release. There is no reject option.
+                        </p>
+                      </div>
+                    )}
+
+                  {/* Deadline Passed Message */}
+                  {!isOwner && votingDeadlinePassed && !userHasVoted && (
+                    <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+                      <div className="flex items-start">
+                        <AlertCircle className="h-5 w-5 text-red-600 mr-2 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-red-700">
+                            Voting Deadline Passed
+                          </p>
+                          <p className="text-sm text-red-600 mt-1">
+                            The voting period for this cycle has ended. You can
+                            no longer cast your vote.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* User Vote Status */}
+                  {!isOwner && userHasVoted && (
+                    <div className="p-4 rounded-lg border-2 bg-green-50 border-green-300">
+                      <div className="flex items-center">
+                        <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                        <span className="font-semibold text-green-700">
+                          You have voted for this cycle
+                        </span>
+                      </div>
+                      <p className="text-sm text-green-600 mt-2">
+                        Thank you for participating in the governance of this
+                        project!
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Not Eligible Message */}
+                  {!isOwner && !userHasInvested && (
+                    <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                      <div className="flex items-start">
+                        <AlertCircle className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-gray-700">
+                            Not Eligible to Vote
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Only investors who have funded this project can vote
+                            on fund releases. Invest in this project to
+                            participate in future voting cycles.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Owner View - Summary */}
+                  {isOwner && (
+                    <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                      <div className="flex items-start">
+                        <MessageSquare className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-blue-700">
+                            Voting Status Summary
+                          </p>
+                          <p className="text-sm text-blue-600 mt-1">
+                            {votingStats.voted >= votingStats.needed ? (
+                              <>
+                                ✅ The voting threshold has been reached! You
+                                can now process the fund release through the
+                                smart contract.
+                              </>
+                            ) : (
+                              <>
+                                ⏳ Waiting for{" "}
+                                {votingStats.needsMore} more
+                                vote(s) to reach the threshold of{" "}
+                                {votingStats.needed} votes.
+                              </>
+                            )}
+                          </p>
+                          {votingDeadlinePassed && (
+                            <p className="text-sm text-red-600 mt-2">
+                              ⚠️ Voting deadline has passed. This cycle may need
+                              to be closed or extended.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Investors Section - Only visible to owner */}
           {isOwner && (
@@ -657,83 +1116,109 @@ export default function ViewProject() {
                     <div className="space-y-4">
                       <h4 className="font-semibold text-lg">Top Investors</h4>
                       {investmentsData.investmentsByFunder.map(
-                        (investorData, index) => (
-                          <div
-                            key={investorData.funder}
-                            className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                            onClick={() => router.push(`/profile/${investorData.funder}`)}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-start space-x-3 flex-1">
-                                <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                  {/* Avatar or initials here */}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center space-x-2">
-                                    <h5 className="font-medium">
-                                      {investorDetails[investorData.funder]
-                                        ?.name || "Anonymous Investor"}
-                                    </h5>
-                                    {index === 0 && (
-                                      <Badge
-                                        variant="default"
-                                        className="text-xs"
-                                      >
-                                        Top Investor
-                                      </Badge>
+                        (investorData, index) => {
+                          // Check if this investor has voted
+                          const hasVoted = votes.some(
+                            (v) =>
+                              v.voteBy ===
+                              investorData.funder
+                          );
+
+                          return (
+                            <div
+                              key={investorData.funder}
+                              className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                              onClick={() =>
+                                router.push(`/profile/${investorData.funder}`)
+                              }
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-start space-x-3 flex-1">
+                                  <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                    {investorDetails[investorData.funder]?.name
+                                      ? investorDetails[
+                                          investorData.funder
+                                        ].name.charAt(0).toUpperCase()
+                                      : "A"}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center space-x-2">
+                                      <h5 className="font-medium">
+                                        {investorDetails[investorData.funder]
+                                          ?.name || "Anonymous Investor"}
+                                      </h5>
+                                      {index === 0 && (
+                                        <Badge
+                                          variant="default"
+                                          className="text-xs"
+                                        >
+                                          Top Investor
+                                        </Badge>
+                                      )}
+                                      {hasVoted && votingCycle && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-xs bg-green-50 text-green-700 border-green-300"
+                                        >
+                                          <CheckCircle className="h-3 w-3 mr-1" />
+                                          Voted
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-xs font-mono text-muted-foreground truncate mt-1">
+                                      {investorData.funder}
+                                    </p>
+                                    {investorData.funderDetails?.role && (
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        {investorData.funderDetails.role}
+                                      </p>
                                     )}
                                   </div>
-                                  <p className="text-xs font-mono text-muted-foreground truncate mt-1">
-                                    {investorData.funder}
-                                  </p>
-                                  {investorData.funderDetails?.role && (
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                      {investorData.funderDetails.role}
-                                    </p>
-                                  )}
+                                </div>
+                                <div className="text-right ml-4">
+                                  <div className="text-lg font-bold text-green-600">
+                                    {investorData.totalAmount.toFixed(3)} ETH
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {investorData.investmentCount} investment
+                                    {investorData.investmentCount > 1
+                                      ? "s"
+                                      : ""}
+                                  </div>
                                 </div>
                               </div>
-                              <div className="text-right ml-4">
-                                <div className="text-lg font-bold text-green-600">
-                                  {investorData.totalAmount.toFixed(3)} ETH
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {investorData.investmentCount} investment
-                                  {investorData.investmentCount > 1 ? "s" : ""}
-                                </div>
-                              </div>
-                            </div>
 
-                            {/* Individual Investments */}
-                            {investorData.investmentCount > 1 && (
-                              <div className="mt-3 pt-3 border-t border-gray-200">
-                                <div className="text-xs text-muted-foreground mb-2">
-                                  Investment History:
-                                </div>
-                                <div className="space-y-1">
-                                  {investorData.investments.map(
-                                    (inv: Investment) => (
-                                      <div
-                                        key={inv._id}
-                                        className="flex justify-between items-center text-xs"
-                                      >
-                                        <div className="flex items-center space-x-2">
-                                          <Clock className="h-3 w-3" />
-                                          <span>
-                                            {formatDate(inv.timestamp)}
+                              {/* Individual Investments */}
+                              {investorData.investmentCount > 1 && (
+                                <div className="mt-3 pt-3 border-t border-gray-200">
+                                  <div className="text-xs text-muted-foreground mb-2">
+                                    Investment History:
+                                  </div>
+                                  <div className="space-y-1">
+                                    {investorData.investments.map(
+                                      (inv: Investment) => (
+                                        <div
+                                          key={inv._id}
+                                          className="flex justify-between items-center text-xs"
+                                        >
+                                          <div className="flex items-center space-x-2">
+                                            <Clock className="h-3 w-3" />
+                                            <span>
+                                              {formatDate(inv.timestamp)}
+                                            </span>
+                                          </div>
+                                          <span className="font-medium">
+                                            {inv.amount.toFixed(3)} ETH
                                           </span>
                                         </div>
-                                        <span className="font-medium">
-                                          {inv.amount.toFixed(3)} ETH
-                                        </span>
-                                      </div>
-                                    )
-                                  )}
+                                      )
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        )
+                              )}
+                            </div>
+                          );
+                        }
                       )}
                     </div>
                   </div>
@@ -965,7 +1450,6 @@ export default function ViewProject() {
 
         {/* Right Column - Investment/Release Panel */}
         {walletAddress && isOwner ? (
-          // OWNER VIEW - Release Funds Section
           <div className="lg:col-span-1">
             <Card className="sticky top-6">
               <CardHeader>
@@ -990,7 +1474,6 @@ export default function ViewProject() {
 
                 <Separator />
 
-                {/* Release Address Input */}
                 <div>
                   <label className="text-sm font-medium block mb-2">
                     Release to Address
@@ -1004,7 +1487,6 @@ export default function ViewProject() {
                   />
                 </div>
 
-                {/* Release Amount Input */}
                 <div>
                   <label className="text-sm font-medium block mb-2">
                     Release Amount (ETH)
@@ -1020,7 +1502,6 @@ export default function ViewProject() {
                   />
                 </div>
 
-                {/* Release Button */}
                 <Button
                   onClick={handleRelease}
                   className="w-full bg-orange-600 hover:bg-orange-700"
@@ -1050,112 +1531,109 @@ export default function ViewProject() {
             </Card>
           </div>
         ) : (
-          walletAddress && (
-            // INVESTOR VIEW - Investment Section
-            <div className="lg:col-span-1">
-              <Card className="sticky top-6">
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Wallet className="h-5 w-5 mr-2" />
-                    Invest in This Project
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
-                    <div className="text-3xl font-bold text-green-600">
-                      {projectStats?.fundingPercentage.toFixed(1)}%
-                    </div>
-                    <p className="text-sm text-muted-foreground">funded</p>
-                    <div className="text-lg font-semibold text-blue-600 mt-1">
-                      {projectStats?.fundedETH.toFixed(2)} /{" "}
-                      {projectStats?.goalETH.toFixed(2)} ETH
+          <div className="lg:col-span-1">
+            <Card className="sticky top-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Wallet className="h-5 w-5 mr-2" />
+                  Invest in This Project
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
+                  <div className="text-3xl font-bold text-green-600">
+                    {projectStats?.fundingPercentage.toFixed(1)}%
+                  </div>
+                  <p className="text-sm text-muted-foreground">funded</p>
+                  <div className="text-lg font-semibold text-blue-600 mt-1">
+                    {projectStats?.fundedETH.toFixed(2)} /{" "}
+                    {projectStats?.goalETH.toFixed(2)} ETH
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium block mb-2">
+                      Investment Amount (ETH)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.001"
+                        min="0"
+                        placeholder="0.1"
+                        value={investAmount}
+                        onChange={(e) => setInvestAmount(e.target.value)}
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        disabled={projectStats?.isFullyFunded || isInvesting}
+                      />
+                      <div className="absolute right-3 top-3 text-sm text-muted-foreground">
+                        ETH
+                      </div>
                     </div>
                   </div>
 
-                  <Separator />
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium block mb-2">
-                        Investment Amount (ETH)
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          step="0.001"
-                          min="0"
-                          placeholder="0.1"
-                          value={investAmount}
-                          onChange={(e) => setInvestAmount(e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          disabled={projectStats?.isFullyFunded || isInvesting}
-                        />
-                        <div className="absolute right-3 top-3 text-sm text-muted-foreground">
-                          ETH
-                        </div>
-                      </div>
-                    </div>
-
-                    <Button
-                      onClick={handleInvest}
-                      className="w-full py-3 text-lg font-semibold"
-                      size="lg"
-                      disabled={
-                        !investAmount ||
-                        parseFloat(investAmount) <= 0 ||
-                        projectStats?.isFullyFunded ||
-                        isInvesting
-                      }
-                    >
-                      {isInvesting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Investing...
-                        </>
-                      ) : projectStats?.isFullyFunded ? (
-                        <>
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Project Fully Funded
-                        </>
-                      ) : (
-                        <>
-                          <DollarSign className="h-4 w-4 mr-2" />
-                          Invest {investAmount || "0"} ETH
-                        </>
-                      )}
-                    </Button>
-
-                    {investAmount && parseFloat(investAmount) > 0 && (
-                      <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-lg">
-                        <p className="font-medium">Investment Summary:</p>
-                        <p>Amount: {investAmount} ETH</p>
-                        <p>
-                          Your contribution:{" "}
-                          {projectStats && projectStats.goalETH > 0
-                            ? (
-                                (parseFloat(investAmount) /
-                                  projectStats.goalETH) *
-                                100
-                              ).toFixed(2)
-                            : 0}
-                          % of goal
-                        </p>
-                      </div>
+                  <Button
+                    onClick={handleInvest}
+                    className="w-full py-3 text-lg font-semibold"
+                    size="lg"
+                    disabled={
+                      !investAmount ||
+                      parseFloat(investAmount) <= 0 ||
+                      projectStats?.isFullyFunded ||
+                      isInvesting
+                    }
+                  >
+                    {isInvesting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Investing...
+                      </>
+                    ) : projectStats?.isFullyFunded ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Project Fully Funded
+                      </>
+                    ) : (
+                      <>
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Invest {investAmount || "0"} ETH
+                      </>
                     )}
-                  </div>
+                  </Button>
 
-                  <Separator />
+                  {investAmount && parseFloat(investAmount) > 0 && (
+                    <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-lg">
+                      <p className="font-medium">Investment Summary:</p>
+                      <p>Amount: {investAmount} ETH</p>
+                      <p>
+                        Your contribution:{" "}
+                        {projectStats && projectStats.goalETH > 0
+                          ? (
+                              (parseFloat(investAmount) /
+                                projectStats.goalETH) *
+                              100
+                            ).toFixed(2)
+                          : 0}
+                        % of goal
+                      </p>
+                    </div>
+                  )}
+                </div>
 
-                  <div className="text-xs text-muted-foreground space-y-2">
-                    <p>• Your investment will be held in a smart contract</p>
-                    <p>• Funds are released based on milestone completion</p>
-                    <p>• You can track project progress and fund releases</p>
-                    <p>• Investment is non-refundable once committed</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )
+                <Separator />
+
+                <div className="text-xs text-muted-foreground space-y-2">
+                  <p>• Your investment will be held in a smart contract</p>
+                  <p>• Funds are released based on milestone completion</p>
+                  <p>• You can track project progress and fund releases</p>
+                  <p>• Investment is non-refundable once committed</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>
