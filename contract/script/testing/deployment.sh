@@ -23,5 +23,5 @@ fi
 forge script testing.s.sol:DeployAndCreateFundify \
     --rpc-url $RPC_URL \
     --broadcast \
-    --private-key $USER1_PRIVATE_KEY
+    --private-key $USER1_PRIVATE_KEY --via-ir
 

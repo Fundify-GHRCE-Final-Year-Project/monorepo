@@ -67,11 +67,5 @@ contract DeployAndCreateFundify is Script {
         vm.startBroadcast(funder2PrivateKey);
         fundify.voteOnReleaseRequest(userPublicKey, 0);
         vm.stopBroadcast();
-
-        vm.warp(block.timestamp + 7 days);
-
-        vm.startBroadcast(userPublicKey);
-        fundify.releaseFunds(0, 1 ether, userPublicKey, false);
-        vm.stopBroadcast();
     }
 }

@@ -1,10 +1,44 @@
 export const abi = [
   {
     type: "function",
+    name: "REQUIRED_VOTES",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "UPGRADE_INTERFACE_VERSION",
     inputs: [],
     outputs: [{ name: "", type: "string", internalType: "string" }],
     stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "VOTING_COOLDOWN",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "VOTING_DEADLINE",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "abandonProject",
+    inputs: [
+      {
+        name: "_projectIndex",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
     type: "function",
@@ -20,8 +54,16 @@ export const abi = [
     type: "function",
     name: "fundProject",
     inputs: [
-      { name: "_projectOwner", type: "address", internalType: "address" },
-      { name: "_projectIndex", type: "uint256", internalType: "uint256" },
+      {
+        name: "_projectOwner",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "_projectIndex",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
     outputs: [],
     stateMutability: "payable",
@@ -48,10 +90,28 @@ export const abi = [
       { name: "", type: "uint256", internalType: "uint256" },
     ],
     outputs: [
-      { name: "projectOwner", type: "address", internalType: "address" },
-      { name: "projectIndex", type: "uint256", internalType: "uint256" },
+      {
+        name: "projectOwner",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "projectIndex",
+        type: "uint256",
+        internalType: "uint256",
+      },
       { name: "amount", type: "uint256", internalType: "uint256" },
     ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "investorCount",
+    inputs: [
+      { name: "", type: "address", internalType: "address" },
+      { name: "", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "view",
   },
   {
@@ -82,7 +142,6 @@ export const abi = [
       { name: "milestones", type: "uint256", internalType: "uint256" },
       { name: "funded", type: "uint256", internalType: "uint256" },
       { name: "released", type: "uint256", internalType: "uint256" },
-      { name: "ended", type: "bool", internalType: "bool" },
     ],
     stateMutability: "view",
   },
@@ -97,9 +156,14 @@ export const abi = [
     type: "function",
     name: "releaseFunds",
     inputs: [
-      { name: "_projectIndex", type: "uint256", internalType: "uint256" },
+      {
+        name: "_projectIndex",
+        type: "uint256",
+        internalType: "uint256",
+      },
       { name: "_amount", type: "uint256", internalType: "uint256" },
-      { name: "to", type: "address", internalType: "address" },
+      { name: "_to", type: "address", internalType: "address" },
+      { name: "initiate", type: "bool", internalType: "bool" },
     ],
     outputs: [],
     stateMutability: "payable",
@@ -122,8 +186,92 @@ export const abi = [
     type: "function",
     name: "upgradeToAndCall",
     inputs: [
-      { name: "newImplementation", type: "address", internalType: "address" },
+      {
+        name: "newImplementation",
+        type: "address",
+        internalType: "address",
+      },
       { name: "data", type: "bytes", internalType: "bytes" },
+    ],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "voteOnReleaseRequest",
+    inputs: [
+      {
+        name: "_projectOwner",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "_projectIndex",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "voted",
+    inputs: [
+      { name: "", type: "address", internalType: "address" },
+      { name: "", type: "uint256", internalType: "uint256" },
+      { name: "", type: "uint256", internalType: "uint256" },
+      { name: "", type: "address", internalType: "address" },
+    ],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "votes",
+    inputs: [
+      { name: "", type: "address", internalType: "address" },
+      { name: "", type: "uint256", internalType: "uint256" },
+      { name: "", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "votingCycle",
+    inputs: [
+      { name: "", type: "address", internalType: "address" },
+      { name: "", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "votingDeadline",
+    inputs: [
+      { name: "", type: "address", internalType: "address" },
+      { name: "", type: "uint256", internalType: "uint256" },
+      { name: "", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "withdrawFunds",
+    inputs: [
+      {
+        name: "_projectOwner",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "_projectIndex",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
     outputs: [],
     stateMutability: "payable",
@@ -269,6 +417,12 @@ export const abi = [
         internalType: "address",
       },
       {
+        name: "cycle",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
         name: "timestamp",
         type: "uint256",
         indexed: false,
@@ -291,17 +445,102 @@ export const abi = [
     anonymous: false,
   },
   {
+    type: "event",
+    name: "Voted",
+    inputs: [
+      {
+        name: "projectOwner",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "projectIndex",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "voteBy",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "votingCycle",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "VotingCycleInitiated",
+    inputs: [
+      {
+        name: "projectOwner",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "projectIndex",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "depositWallet",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "votingCycle",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "votingDeadline",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "votesNeeded",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
     type: "error",
     name: "AddressEmptyCode",
     inputs: [{ name: "target", type: "address", internalType: "address" }],
   },
+  { type: "error", name: "AlreadyVoted", inputs: [] },
   { type: "error", name: "AmountExceedsProjectFund", inputs: [] },
   { type: "error", name: "AmountExceedsProjectGoal", inputs: [] },
   {
     type: "error",
     name: "ERC1967InvalidImplementation",
     inputs: [
-      { name: "implementation", type: "address", internalType: "address" },
+      {
+        name: "implementation",
+        type: "address",
+        internalType: "address",
+      },
     ],
   },
   { type: "error", name: "ERC1967NonPayable", inputs: [] },
@@ -314,7 +553,11 @@ export const abi = [
   { type: "error", name: "InvalidIndexInput", inputs: [] },
   { type: "error", name: "InvalidInitialization", inputs: [] },
   { type: "error", name: "InvalidMilestonesInput", inputs: [] },
+  { type: "error", name: "MilestoneNotReached", inputs: [] },
+  { type: "error", name: "NoFunds", inputs: [] },
+  { type: "error", name: "NotEnoughVotes", inputs: [] },
   { type: "error", name: "NotInitializing", inputs: [] },
+  { type: "error", name: "OnCooldown", inputs: [] },
   {
     type: "error",
     name: "OwnableInvalidOwner",
@@ -325,11 +568,17 @@ export const abi = [
     name: "OwnableUnauthorizedAccount",
     inputs: [{ name: "account", type: "address", internalType: "address" }],
   },
+  { type: "error", name: "ProjectAbandoned", inputs: [] },
+  { type: "error", name: "ProjectEmpty", inputs: [] },
   { type: "error", name: "ProjectEnded", inputs: [] },
+  { type: "error", name: "ProjectNotAbandoned", inputs: [] },
   { type: "error", name: "UUPSUnauthorizedCallContext", inputs: [] },
   {
     type: "error",
     name: "UUPSUnsupportedProxiableUUID",
     inputs: [{ name: "slot", type: "bytes32", internalType: "bytes32" }],
   },
+  { type: "error", name: "VotingCycleEnded", inputs: [] },
+  { type: "error", name: "VotingCycleGoingOn", inputs: [] },
+  { type: "error", name: "VotingCycleNotEnded", inputs: [] },
 ];

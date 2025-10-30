@@ -130,6 +130,7 @@ export default function ViewProject() {
 
   const [releaseAddress, setReleaseAddress] = useState("");
   const [releaseAmount, setReleaseAmount] = useState("");
+  const [isInitiating, setIsInitiating] = useState(false);
   const [isReleasing, setIsReleasing] = useState(false);
 
   const {
@@ -189,7 +190,7 @@ export default function ViewProject() {
   // Check if current user is the owner
   const isOwner = useMemo(() => {
     return walletAddress && project?.owner
-      ? walletAddress=== project.owner
+      ? walletAddress === project.owner
       : false;
   }, [walletAddress, project?.owner]);
 
@@ -228,8 +229,7 @@ export default function ViewProject() {
     if (!walletAddress || !votes || !votingCycle) return false;
     return votes.some(
       (v) =>
-        v.voteBy === walletAddress &&
-        v.votingCycle === votingCycle.votingCycle
+        v.voteBy === walletAddress && v.votingCycle === votingCycle.votingCycle
     );
   }, [walletAddress, votes, votingCycle]);
 
@@ -368,7 +368,7 @@ export default function ViewProject() {
   }, [project?.members]);
 
   // Handle Release
-  const handleRelease = async () => {
+  const handleInitiateVotingCycle = async () => {
     if (!currentUser) {
       toast.error("No Wallet Found", {
         description: "Please connect your wallet",
@@ -382,6 +382,8 @@ export default function ViewProject() {
       });
       return;
     }
+
+    setIsInitiating(true);
 
     showLoadingDialog({
       isOpen: true,
@@ -402,7 +404,7 @@ export default function ViewProject() {
         address: contractAddress as `0x${string}`,
         abi: abi,
         functionName: "releaseFunds",
-        args: [project.index, releaseAddress, parseEther(releaseAmount)],
+        args: [project.index, parseEther(releaseAmount), releaseAddress, true],
         gas: BigInt(300000),
       });
 
@@ -422,6 +424,67 @@ export default function ViewProject() {
       });
     } finally {
       hideLoadingDialog();
+      setIsInitiating(false);
+    }
+  };
+
+  const handleRelease = async () => {
+    if (!currentUser) {
+      toast.error("No Wallet Found", {
+        description: "Please connect your wallet",
+      });
+      return;
+    }
+
+    if (!releaseAddress || !releaseAmount || !project) {
+      toast.error("Invalid Inputs", {
+        description: "Please enter valid address and amount",
+      });
+      return;
+    }
+
+    setIsReleasing(true);
+
+    showLoadingDialog({
+      isOpen: true,
+      title: "Processing Release",
+      description: "Releasing funds on Ethereum",
+    });
+
+    try {
+      const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
+      if (!contractAddress) {
+        toast.error("Environment Error", {
+          description: "CONTRACT_ADDRESS is not set.",
+        });
+        return;
+      }
+
+      const sig = await writeContractAsync({
+        address: contractAddress as `0x${string}`,
+        abi: abi,
+        functionName: "releaseFunds",
+        args: [project.index, parseEther(releaseAmount), releaseAddress, false],
+        gas: BigInt(300000),
+      });
+
+      toast.success("Funds Released", {
+        description: `Transaction: ${sig}`,
+      });
+
+      setReleaseAddress("");
+      setReleaseAmount("");
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      toast.error("Release Failed", {
+        description: `${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      });
+    } finally {
+      hideLoadingDialog();
+      setIsReleasing(false);
     }
   };
 
@@ -478,7 +541,6 @@ export default function ViewProject() {
     }
   };
 
-  // Handle voting
   const handleVote = async () => {
     if (!walletAddress || !votingCycle || !project) {
       toast.error("Error", {
@@ -501,41 +563,39 @@ export default function ViewProject() {
       return;
     }
 
-    setIsVoting(true);
+    showLoadingDialog({
+      isOpen: true,
+      title: "Processing your request",
+      description: "Calling Fundify on Ethereum",
+    });
     try {
-      const response = await fetch("/api/votes/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          projectIndex: projectIndex,
-          votingCycleNumber: votingCycle.votingCycle,
-          investorWallet: walletAddress,
-          projectOwner: project.owner,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast.success("Vote Submitted", {
-          description: "Your vote has been recorded successfully",
+      const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
+      if (!contractAddress) {
+        toast.error("Environment Error", {
+          description: "CONTRACT_ADDRESS is not set.",
         });
-        // Refresh voting data
-        window.location.reload();
-      } else {
-        toast.error("Vote Failed", {
-          description: result.message || "Failed to submit vote",
-        });
+        return;
       }
+      const sig = await writeContractAsync({
+        address: contractAddress as `0x${string}`,
+        abi: abi,
+        functionName: "voteOnReleaseRequest",
+        args: [project.owner, project.index],
+        gas: BigInt(300000),
+      });
+      toast.success("Voting Successful", {
+        description: `${sig}`,
+      });
+      window.location.reload();
     } catch (error) {
-      console.error("Vote error:", error);
+      console.log(error);
       toast.error("Error", {
-        description: "Failed to submit vote",
+        description: `${
+          error instanceof Error ? error.message : String(error)
+        }`,
       });
     } finally {
-      setIsVoting(false);
+      hideLoadingDialog();
     }
   };
 
@@ -787,8 +847,8 @@ export default function ViewProject() {
                   {isOwner
                     ? "Track voting progress for your fund release request"
                     : userHasInvested
-                    ? "Cast your vote to approve the fund release"
-                    : "Only investors can vote on fund releases"}
+                      ? "Cast your vote to approve the fund release"
+                      : "Only investors can vote on fund releases"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1023,8 +1083,7 @@ export default function ViewProject() {
                               </>
                             ) : (
                               <>
-                                ⏳ Waiting for{" "}
-                                {votingStats.needsMore} more
+                                ⏳ Waiting for {votingStats.needsMore} more
                                 vote(s) to reach the threshold of{" "}
                                 {votingStats.needed} votes.
                               </>
@@ -1119,9 +1178,7 @@ export default function ViewProject() {
                         (investorData, index) => {
                           // Check if this investor has voted
                           const hasVoted = votes.some(
-                            (v) =>
-                              v.voteBy ===
-                              investorData.funder
+                            (v) => v.voteBy === investorData.funder
                           );
 
                           return (
@@ -1138,7 +1195,9 @@ export default function ViewProject() {
                                     {investorDetails[investorData.funder]?.name
                                       ? investorDetails[
                                           investorData.funder
-                                        ].name.charAt(0).toUpperCase()
+                                        ].name
+                                          .charAt(0)
+                                          .toUpperCase()
                                       : "A"}
                                   </div>
                                   <div className="flex-1 min-w-0">
@@ -1502,6 +1561,20 @@ export default function ViewProject() {
                   />
                 </div>
 
+                <Button
+                  onClick={handleInitiateVotingCycle}
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                  disabled={!releaseAddress || !releaseAmount || isReleasing}
+                >
+                  {isReleasing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Initiating...
+                    </>
+                  ) : (
+                    <>Initiate Voting Cycle</>
+                  )}
+                </Button>
                 <Button
                   onClick={handleRelease}
                   className="w-full bg-orange-600 hover:bg-orange-700"

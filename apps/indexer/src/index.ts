@@ -8,11 +8,17 @@ import {
 } from "./lib/eventParsers";
 import { connectDB } from "@fundify/database";
 import { ProjectModel, InvestmentModel } from "@fundify/database";
-import { VotingCycleModel, VoteModel, ProjectFundsReleasedModel } from "@fundify/database";
+import {
+  VotingCycleModel,
+  VoteModel,
+  ProjectFundsReleasedModel,
+} from "@fundify/database";
 import { getRandomProject } from "./lib/dummyProjects";
 import { ethers } from "ethers";
+require("dotenv").config();
 
 const contractAddress = process.env["CONTRACT_ADDRESS"];
+if (!contractAddress) throw new Error("CONTRACT_ADDRESS is not set");
 const rpcUrl = process.env["RPC_URL"];
 if (!rpcUrl) throw new Error("RPC_URL is not set");
 
@@ -32,9 +38,9 @@ async function fetchAndProcess(fromBlock: number, toBlock: number) {
 
   for (const log of logs) {
     const parsedLog = contractInterface.parseLog(log);
-    const block = await provider.getBlock(log.blockNumber);
-    const blockTimestamp = block?.timestamp || 0;
-    
+    // const block = await provider.getBlock(log.blockNumber);
+    // const blockTimestamp = block?.timestamp || 0;
+
     console.log("Indexed :-");
     console.log(parsedLog?.name);
     console.log("Data: ", parsedLog?.args);
@@ -104,14 +110,15 @@ async function fetchAndProcess(fromBlock: number, toBlock: number) {
           console.log("");
 
           // Save ProjectFundsReleased document
-          const savedProjectFundsReleased = await ProjectFundsReleasedModel.create({
-            owner: projectFundsReleased.owner,
-            index: projectFundsReleased.index,
-            amount: projectFundsReleased.amount,
-            to: projectFundsReleased.to,
-            cycle: projectFundsReleased.cycle,
-            timestamp: projectFundsReleased.timestamp,
-          });
+          const savedProjectFundsReleased =
+            await ProjectFundsReleasedModel.create({
+              owner: projectFundsReleased.owner,
+              index: projectFundsReleased.index,
+              amount: projectFundsReleased.amount,
+              to: projectFundsReleased.to,
+              cycle: projectFundsReleased.cycle,
+              timestamp: projectFundsReleased.timestamp,
+            });
           console.log("Saved ProjectFundsReleased To MongoDB :-");
           console.log(savedProjectFundsReleased);
           console.log("");

@@ -25,6 +25,7 @@ import {
 } from "@/lib/browserCache";
 import { injected, useAccount, useConnect, useDisconnect } from "wagmi";
 import { useDialog } from "./ui/TransactionDialog";
+import { metaMask } from "wagmi/connectors";
 
 export function Header() {
   const router = useRouter();
@@ -193,7 +194,7 @@ export function Header() {
                   if (window != undefined && window.ethereum == undefined) {
                     handleNoWalletConnectAttempt();
                   } else {
-                    connect({ connector: injected() });
+                    connect({ connector: metaMask() });
                   }
                 }}
                 className="flex items-center space-x-2"
